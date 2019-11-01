@@ -45,8 +45,8 @@ table {
   box-sizing: border-box;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  &::-webkit-scrollbar {
-    display: none !important;
+  ::-webkit-scrollbar {
+    display: none;
   }
 }
 

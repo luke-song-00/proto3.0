@@ -62,12 +62,12 @@
 </template>
 
 <script>
-import Velocity from 'velocity-animate';
+// import Velocity from 'velocity-animate';
 
 export default {
   name: 'cropBoxDetail',
   mounted() {
-    const el = this.$refs.box;
+    // const el = this.$refs.box;
     // Velocity(el, { translateY: '-65px', translateX: '-20px' });
 
     // document.scrollingElement.scrollTo(0, 100);

@@ -4,7 +4,7 @@ module.exports = {
   pwa: {
     // msTileColor: '#000000',
     appleMobileWebAppCapable: 'yes',
-    appleMobileWebAppStatusBarStyle: 'black-translucent',
+    // appleMobileWebAppStatusBarStyle: 'black-translucent',
     // configure the workbox plugin
     // workboxPluginMode: 'InjectManifest',
     // workboxOptions: {
@@ -12,5 +12,5 @@ module.exports = {
     //   swSrc: 'dev/sw.js',
     //   // ...other Workbox options...
     // }
-  }
+  },
 };

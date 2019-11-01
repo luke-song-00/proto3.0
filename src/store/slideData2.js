@@ -219,11 +219,69 @@ const SLIDE_DATA = [
   {
     cropData: `<div class="crop">
     <div class="image">
+      <p>여행 준비는<br>마치셨나요?</p>
+      <p class="desc">여행에 도움이 되는<br>머니 팁 먼저 확인하세요</p>
+    </div>
+    <div class="cont">
+      <div>
+        <h2>휴가철 현대카드 사용백서</h2>
+        <p>
+          '직장인에게 허락된 유일한 마약'. 여름 휴가철이 코앞입니다.
+          여행지를 정하고, 코스를 짜고, 항공권과 호텔 예약까지. 정해야 할 게 한두 개가 아니죠.
+          <br>기분 좋은 고민이지만, 최소한 여행지에서 신용카드와 관련된 고민은 덜 수 있도록,
+          당신이 떠나기 전 미리 알아두면 좋은 신용카드 활용법을 소개합니다.
+        </p>
+
+        <h2>성수기 호텔 할인</h2>
+        <ul class="box-list icon">
+          <li>
+            <p>현대카드 전용 프로모션 사이트<br>결제시 12% 즉시 할인</p>
+          </li>
+          <li>
+            <p>현대카드 전용 프로모션 사이트<br>전용 쿠폰 발급</p>
+          </li>
+          <li>
+            <p>야놀자 앱 결제시<br>M포인트 10% 사용</p>
+          </li>
+        </ul>
+        <p class="more">
+          <button>더 알아보기</button>
+        </p>
+
+        <h2>면세점 무이자 할부 혜택</h2>
+        <ul class="box-list icon">
+          <li>
+            <p>매주 월 화목 30% 즉시 할인<br>매주 월요일 결제금액의 50%<br>M포인트 사용</p>
+          </li>
+          <li>
+            <p>항공 여행 업종 5만원 이상<br>결제 시 2~6개월 무이자 할부<br>그 외 가맹점 ~3개월 무이자 할부</p>
+          </li>
+        </ul>
+        <p class="more">
+          <button>더 알아보기</button>
+        </p>
+
+        <h2>유의사항</h2>
+        <ul class="bul-list">
+          <li>M포인트 사용 혜택은 M계열카드에 한해 제공 됩니다.</li>
+          <li>상기 혜택은 당사 및 제휴사 사정에 의해 변경 또는 중단 가능합니다.</li>
+          <li>할인, 쿠폰 및 무이자할부 적용 기준은 해당 대상점에 따라 적용됩니다.</li>
+          <li>모든 가맹점은 현대카드 가맹점 등록 업종 기준입니다.</li>
+        </ul>
+      </div>
+    </div>
+    <button class="close" onclick="window.collapse()">X</button>
+  </div>`,
+  },
+  {
+    cropData: `<div class="crop">
+    <div class="image">
       <p>TROP.COM<br>15% 할인 이벤트</p>
       <p class="desc full-txt">트립닷컴에서 현대카드로<br>결제하면 엄청난 할인이!</p>
       <p class="desc">19.07.23 ~ 08.02</p>
       <button>참여</button>
     </div>
+    <button class="close" onclick="window.collapse()">X</button>
   </div>`,
   },
 ];

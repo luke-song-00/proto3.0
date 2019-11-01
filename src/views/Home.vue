@@ -5,11 +5,11 @@
       <p>
         <button>S</button>
         <button>C</button>
-        <button @click="$router.push('crop-box-detail')">P</button>
+        <button>P</button>
       </p>
     </div>
 
-    <div class="content-box" v-show="true" :class="[...contentBoxClass]">
+    <div class="content-box" v-show="showList" :class="[...contentBoxClass]">
       <div ref="cropBox" v-for="(data, index) in slideData" :key="`cropbox${index}`"
         class="box collapsed" :class="[`box${index}`, {'used-list': index === 0}]">
         <div class="box-wrapper" v-show="viewStatus === 'list'"
@@ -20,22 +20,136 @@
       </div>
     </div>
 
-    <!-- @touchstart.self="scaleDown(index)"
-          @touchmove.self="relaseScale(index)"
-          @touchend.self="expand(index)" -->
-
-    <!-- <div class="swiper-box" v-show="false">
-      <swiper :options="swiperOptions">
-        <swiper-slide v-for="(data, index) in slideData" :key="`slidebox${index}`" class="box no-shadow full" :class="[`box${index}`, {'used-list': index === 0}]">
+    <div ref="swiperBox" class="swiper-box" v-show="showSwiper">
+      <swiper ref="hSwiper" :options="swiperOptions">
+        <swiper-slide
+          ref="swiperSlide"
+          v-for="(data, index) in slideData" :key="`slidebox${index}`"
+          class="box expanded" :class="[`box${index}`, {'used-list': index === 0}]"
+          @touchmove.native="checkSlideScroll($event)">
           <div class="crop-wrapper" v-html="data.cropData"></div>
         </swiper-slide>
       </swiper>
-    </div> -->
+    </div>
+
+    <!-- @touchstart.prevent="preventAccountTouch"
+      @touchend.prevent="releaseAccountTouch" -->
+    <div
+      ref="accountBox" class="account-box" :class="[...accountBoxClass]">
+      <div ref="panHandler" class="pan-handle-wrapper" :class="[...accountBoxClass]">
+        <div class="pan-handle"></div>
+      </div>
+
+      <div class="sum">
+        <p class="date">
+          <span>9.12 결제금액</span>
+          <span class="small-sum">2,500,000<span class="unit">원</span></span>
+        </p>
+        <p class="sum">2,500,000<span class="unit">원</span></p>
+        <p class="btns">
+          <button>즉시결제</button>
+          <button>분할납부</button>
+          <button>최소결제</button>
+        </p>
+      </div>
+
+      <div class="box used-box">
+        <h3>최근 이용내역</h3>
+        <div>
+          <p>
+            <span>현대오일뱅크</span>
+            <span class="date">08.04 11:20 <span class="bar">|</span> 일시불</span>
+          </p>
+          <p>100,000</p>
+        </div>
+      </div>
+
+      <div class="box loan-info">
+        <ul>
+          <li>
+            <h3>잔여한도</h3>
+            <p class="sum">9,400,000<span class="unit">원</span></p>
+            <div class="donut-wrap">
+              <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path class="circle"
+                  stroke-dasharray="75, 100"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <p class="percentage">75%</p>
+            </div>
+          </li>
+
+          <li>
+            <h3>카드론</h3>
+            <p class="desc">장기카드대출</p>
+            <p class="sum">3,500<span class="unit">만원</span></p>
+          </li>
+
+          <li>
+            <h3>현금서비스</h3>
+            <p class="desc">단기카드대출</p>
+            <p class="sum">500<span class="unit">만원</span></p>
+          </li>
+        </ul>
+      </div>
+
+      <ul class="box point">
+        <li>
+          <p>M포인트</p>
+          <p>6,500</p>
+        </li>
+        <li>
+          <p>스마일 캐시</p>
+          <p>30,000</p>
+        </li>
+      </ul>
+
+      <div class="box hurdle-wrap">
+        <h3>M포인트 적립</h3>
+        <p>목적 달성 성공! M포인트 1.5배 달성 적립</p>
+        <div class="hurdle">
+          <p class="sum">2,500,000<span class="unit">원</span></p>
+          <p class="progress-bar"><progress value="100" max="100"></progress></p>
+          <div>
+            <p>미적립<span>50만원 미만</span></p>
+            <p>0.5 ~ 2%<span>50만원 이상</span></p>
+            <p>X1.5배<span>100만원 이상</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box benefit">
+        <h3>받은 혜택</h3>
+        <ul class="box-list">
+          <li>
+            <p>7월 적립 M포인트</p>
+            <p>12,700</p>
+          </li>
+          <li>
+            <p>7월 적립 스마일캐시</p>
+            <p>3,800</p>
+          </li>
+          <li>
+            <p>7월 누린 혜택</p>
+            <p>102,900원</p>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import Velocity from 'velocity-animate';
+import Hammer from 'hammerjs';
 // import SLIDE_DATA from '@/store/slideData';
 import SLIDE_DATA from '@/store/slideData2';
 
@@ -45,10 +159,16 @@ export default {
     importedSlideData: SLIDE_DATA,
     slideData: [],
     viewStatus: 'list',
+    // viewStatus: 'full',
     swiperOptions: {
       spaceBetween: 5,
     },
     activeIndex: 0,
+    windowScrollTop: 0,
+    showSwiper: false,
+    accountTranslateY: 0,
+    accountBoxStatus: 'detail',
+    showList: true,
   }),
   computed: {
     contentBoxClass() {
@@ -56,8 +176,73 @@ export default {
         `${this.viewStatus}`,
       ];
     },
+    accountBox() {
+      return this.$refs.accountBox;
+    },
+    accountBoxRect() {
+      return this.$refs.accountBox.getBoundingClientRect();
+    },
+    accountBoxClass() {
+      return [
+        `${this.accountBoxStatus}`,
+      ];
+    },
+  },
+  watch: {
+    viewStatus() {
+      if (this.viewStatus === 'list') {
+        window.addEventListener('scroll', this.onScroll);
+      } else {
+        window.removeEventListener('scroll', this.onScroll);
+      }
+    },
   },
   methods: {
+    setAccountBoxStatus(status) {
+      switch (status) {
+        case 'hide':
+          this.accountTranslateY = this.accountBoxRect.height;
+          break;
+        case 'detail':
+          this.accountTranslateY = 0;
+          break;
+        case 'small':
+          this.accountTranslateY = this.accountBoxRect.height - 100;
+          break;
+        case 'collapsed':
+          this.accountTranslateY = this.accountBoxRect.height - 180;
+          break;
+        default:
+          this.accountTranslateY = this.accountBoxRect.height - 180;
+          break;
+      }
+      if (status !== 'hide') {
+        this.accountBox.classList.remove('hide');
+        this.accountBoxStatus = status;
+        if (status === 'small' || status === 'collapsed') {
+          this.accountBox.scrollTo(0, 0);
+        }
+      } else {
+        this.accountBox.classList.add('hide');
+      }
+
+      if (status === 'detail') {
+        document.scrollingElement.style.position = 'fixed';
+        document.scrollingElement.style.width = '100%';
+        document.scrollingElement.style.overflow = 'hidden';
+      } else {
+        document.scrollingElement.style.position = '';
+        document.scrollingElement.style.overflow = '';
+      }
+      Velocity(this.accountBox,
+        {
+          translateY: this.accountTranslateY,
+        },
+        {
+          duration: 200,
+          easing: 'ease',
+        });
+    },
     scaleDown(index) {
       if (this.viewStatus !== 'list') {
         return;
@@ -109,12 +294,14 @@ export default {
       if (this.viewStatus !== 'list') {
         return;
       }
+
+      this.windowScrollTop = document.scrollingElement.scrollTop;
+
       const data = this.slideData[index];
       if (data.status === 'scaleDown') {
         this.hideMenu();
+        this.setAccountBoxStatus('hide');
         const el = this.$refs.cropBox[index];
-        // const el = this.$refs.cropBox;
-        // const rect = el.getBoundingClientRect();
 
         const calcTop = data.style['--current-top'].charAt(0) === '-'
           ? data.style['--current-top'].replace('-', '')
@@ -138,20 +325,16 @@ export default {
           {
             duration: 500,
             easing: [0.18, 0.89, 0.32, 1.1],
-            // easing: 'ease',
             queue: false,
           });
         Velocity(el,
           {
             width: target.width,
-            // height: target.height,
-            // translateX: target.left,
           },
           {
             duration: 300,
             delay: 50,
             easing: [0.18, 0.89, 0.32, 1.1],
-            // easing: 'ease',
             queue: false,
           });
         Velocity(el,
@@ -162,88 +345,99 @@ export default {
             duration: 400,
             delay: 100,
             easing: [0.18, 0.89, 0.32, 1.1],
-            // easing: 'ease',
             queue: false,
           })
           .then(() => {
-            this.$nextTick(() => {
-              document.scrollingElement.scrollTo(0, 0);
-              this.$refs.cropBox.forEach((cropEl, cropIdx) => {
-                if (cropIdx !== index) {
-                  cropEl.classList.add('hidden');
-                }
-              });
-
-              this.viewStatus = 'full';
-              data.status = 'expanded';
-              el.style.transform = '';
-              el.style.width = '';
-              el.style.height = '';
-              el.classList.remove('transform');
-              // el.classList.remove('collapsed');
-              el.classList.add('expanded');
-              this.activeIndex = index;
-              // Velocity(el, { translateY: '0px' }, { duration: 0 });
+            this.$refs.cropBox.forEach((cropEl, cropIdx) => {
+              if (cropIdx !== index) {
+                cropEl.classList.add('hidden');
+              }
             });
+            document.scrollingElement.scrollTo(0, 0);
+            el.style.transform = '';
+            el.style.width = '';
+            el.style.height = '';
+            el.classList.remove('transform');
+            el.classList.add('expanded');
+            data.status = 'expanded';
+            this.viewStatus = 'full';
+            this.activeIndex = index;
+            this.$refs.hSwiper.swiper.slideTo(this.activeIndex, 0);
+
+            this.showSwiper = true;
+            setTimeout(() => {
+              this.showList = false;
+            }, 100);
           });
       }
     },
 
     collapse() {
-      const index = this.activeIndex;
-      const data = this.slideData[index];
-      const el = this.$refs.cropBox[index];
+      this.showList = true;
+      setTimeout(() => {
+        this.showSwiper = false;
+      }, 100);
+      // debugger;
+      setTimeout(() => {
+        const index = this.activeIndex;
+        const data = this.slideData[index];
+        const el = this.$refs.cropBox[index];
 
-      // const initialTop = data.style['--current-top'];
-      // const initialLeft = data.style['--current-left'];
-      const initialWidth = data.style['--current-width'];
-      const initialHeight = data.style['--current-height'];
+        // const initialTop = data.style['--current-top'];
+        // const initialLeft = data.style['--current-left'];
+        const initialWidth = data.style['--current-width'];
+        const initialHeight = data.style['--current-height'];
 
-      el.classList.remove('expanded');
-      el.classList.add('collapsing');
-      this.$refs.cropBox.forEach((cropEl) => {
-        cropEl.classList.remove('hidden');
-      });
-
-      this.viewStatus = 'list';
-
-      this.showMenu();
-
-      Velocity(el,
-        {
-          translateY: '0px',
-        },
-        {
-          duration: 400,
-          easing: [0.18, 0.89, 0.32, 1.1],
-          queue: false,
+        el.classList.remove('expanded');
+        el.classList.add('collapsing');
+        this.$refs.cropBox.forEach((cropEl) => {
+          cropEl.classList.remove('hidden');
         });
-      Velocity(el,
-        {
-          width: initialWidth,
-        },
-        {
-          duration: 300,
-          easing: 'linear',
-          queue: false,
-        });
-      Velocity(el,
-        {
-          height: initialHeight,
-        },
-        {
-          duration: 300,
-          easing: 'linear',
-          queue: false,
-        })
-        .then(() => {
-          data.status = 'initial';
-          el.style.transform = '';
-          el.style.width = '';
-          el.style.height = '';
-          el.classList.add('collapsed');
-          el.classList.remove('collapsing');
-        });
+
+        this.viewStatus = 'list';
+
+        this.showMenu();
+        this.setAccountBoxStatus(this.accountBoxStatus);
+
+        document.scrollingElement.scrollTo(0, this.windowScrollTop);
+
+        Velocity(el,
+          {
+            height: initialHeight,
+          },
+          {
+            duration: 200,
+            easing: 'ease',
+            queue: false,
+          });
+        Velocity(el,
+          {
+            width: initialWidth,
+          },
+          {
+            duration: 300,
+            easing: 'ease',
+            queue: false,
+          });
+        Velocity(el,
+          {
+            translateY: '0px',
+          },
+          {
+            duration: 400,
+            easing: [0.29, 0.78, 0.51, 0.92],
+            // easing: 'ease',
+            queue: false,
+          })
+          .then(() => {
+            data.status = 'initial';
+            el.style.transform = '';
+            el.style.width = '';
+            el.style.height = '';
+            el.classList.add('collapsed');
+            el.classList.remove('collapsing');
+          });
+      }, 10);
     },
 
     hideMenu() {
@@ -258,8 +452,89 @@ export default {
       el.classList.add('show');
       // Velocity(el, { translateY: '0px' }, { duration: 200, easing: 'ease' });
     },
-  },
+    onScroll() {
+      if (this.viewStatus === 'list') {
+        const { scrollTop } = document.scrollingElement;
+        if (this.accountBoxStatus === 'collapsed' && scrollTop > 100) {
+          this.setAccountBoxStatus('small');
+        } else if (this.accountBoxStatus === 'small' && scrollTop <= 100) {
+          this.setAccountBoxStatus('collapsed');
+        }
+      }
+    },
+    initAccountBoxGesture() {
+      // const { accountBox } = this;
+      const { panHandler } = this.$refs;
+      const mc = new Hammer(panHandler);
+      // mc.get('pan').set({ direction: Hammer.DIRECTION_VERTICAL });
+      mc.get('swipe').set({ direction: Hammer.DIRECTION_VERTICAL });
+      // mc.on('pan', (ev) => {
+      //   if (Math.abs(ev.velocity) > 1) {
+      //     if (ev.deltaY < 0) {
+      //       this.setAccountBoxStatus('detail');
+      //     } else {
+      //       this.setAccountBoxStatus('collapsed');
+      //     }
+      //   } else {
+      //     let targetY;
+      //     if (ev.deltaY < 0) {
+      //       targetY = Math.max(this.accountTranslateY + ev.deltaY, 0);
+      //     } else {
+      //       targetY = Math.min(this.accountTranslateY + ev.deltaY, this.accountBoxRect.height - 100);
+      //     }
 
+      //     Velocity(this.accountBox,
+      //       {
+      //         translateY: targetY,
+      //       },
+      //       {
+      //         duration: 0,
+      //         queue: false,
+      //       });
+      //   }
+      // });
+      mc.on('swipe', (ev) => {
+        // console.log(ev);
+        if (ev.deltaY < 0) {
+          this.setAccountBoxStatus('detail');
+        } else {
+          this.setAccountBoxStatus('collapsed');
+        }
+      });
+    },
+    initSwiperBoxGesture() {
+      // const { swiperBox } = this.$refs;
+      // const mc = new Hammer(swiperBox);
+      // mc.get('swipe').set({ direction: Hammer.DIRECTION_DOWN });
+      // mc.on('swipe', (ev) => {
+      //   this.collapse();
+      // });
+      // this.$refs.swiperSlide.forEach((slideComponent) => {
+      //   const el = slideComponent.$el;
+      //   const mc = new Hammer(el);
+      //   mc.get('swipe').set({ direction: Hammer.DIRECTION_DOWN, touchAction: 'pan-y' });
+      //   mc.on('swipe', (ev) => {
+      //     // console.log(ev);
+      //     // if (ev.deltaY > 0) {
+      //     this.collapse();
+      //     // }
+      //   });
+      // });
+    },
+    preventAccountTouch() {
+      // console.log('prevent account touch');
+      document.scrollingElement.style.overflow = 'hidden';
+    },
+    releaseAccountTouch() {
+      // console.log('account touch end');
+      // document.scrollingElement.style.overflow = '';
+      const { y } = this.accountBox.getBoundingClientRect();
+      this.accountTranslateY = y;
+    },
+    checkSlideScroll($event) {
+      console.log($event);
+    },
+  },
   mounted() {
     this.slideData = this.importedSlideData.map(data => ({
       ...data,
@@ -272,23 +547,419 @@ export default {
       },
     }));
 
-    // document.getElementsByClassName('crop').forEach((element) => {
-    //   element.ontouchstart = function () {};
-    // });
-    // this.hideMenu();
-
     window.collapse = this.collapse;
+    window.homeVm = this;
+
+    // accountBox initial setting;
+    const { height } = this.accountBoxRect;
+    this.accountTranslateY = height - 180;
+
+    Velocity(this.accountBox,
+      { translateY: this.accountTranslateY },
+      {
+        duration: 300,
+        delay: 1200,
+        easing: 'ease',
+      })
+      .then(() => {
+        this.accountBoxStatus = 'collapsed';
+      });
+
+    window.addEventListener('scroll', this.onScroll);
+    this.initAccountBoxGesture();
+    setTimeout(() => {
+      this.initSwiperBoxGesture();
+    }, 1000);
   },
 };
 </script>
 
 <style lang="scss" scoped>
-.home {
-  padding-top: 70px;
-  &.full {
-    padding-top: 0;
+$wH: 100vh;
+$heightPadding: 60px;
+$headerHeight: 180px;
+$height: calc(#{$wH} - #{$heightPadding});
+$bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
+
+.account-box {
+  // display: none;
+  position: fixed;
+  width: 100vw;
+  height: $height;
+  background: #fff;
+  border-top-right-radius: 12px;
+  border-top-left-radius: 12px;
+  z-index: 5;
+  box-shadow: 1px 1px 10px 6px rgba(0, 0, 0, .12);
+  box-sizing: border-box;
+  padding: 0 20px 20px;
+  overflow-y: scroll;
+  bottom: 0;
+  will-change: transform;
+  -webkit-overflow-scrolling: touch;
+
+  &.small, &.collapsed, &.hide {
+    overflow: hidden;
+    div.sum {
+      margin-top: 20px;
+    }
+  }
+
+  &.small {
+    div.sum {
+      .date {
+        span.small-sum {
+          opacity: 1;
+        }
+      }
+      p.sum {
+        opacity: 0;
+      }
+    }
+  }
+
+  &.hide {
+    box-shadow: none;
+  }
+
+  .pan-handle-wrapper {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    display: flex;
+    background: #fff;
+    .pan-handle {
+      margin: auto;
+      width: 50px;
+      height: 4px;
+      background: rgba(0, 0, 0, .12);
+      border-radius: 18px;
+    }
+
+    &.collapsed, &.small, &.hide {
+      position: absolute;
+      height: 100%;
+      background: transparent;
+      .pan-handle {
+        margin-top: 10px;
+      }
+    }
+
+    &.detail {
+      position: sticky;
+      height: 20px;
+      background: #fff;
+    }
+  }
+
+  div.sum {
+    margin-top: 10px;
+    margin-bottom: 35px;
+    .date {
+      font-size: 20px;
+      font-weight: bold;
+      .small-sum {
+        // will-change: opacity;
+        transition: opacity 200ms ease;
+        opacity: 0;
+        font-size: 25px;
+        float: right;
+        margin-top: -5px;
+        .unit {
+          font-size: 15px;
+        }
+      }
+    }
+    p.sum {
+      // will-change: opacity;
+      transition: opacity 200ms ease;
+      opacity: 1;
+      font-size: 34px;
+      font-weight: bold;
+      letter-spacing: -1px;
+      margin-bottom: 0;
+      .unit {
+        margin-left: 5px;
+        font-size: 18px;
+      }
+    }
+    .btns {
+      display: flex;
+      width: 100%;
+      margin-top: 10px;
+      button {
+        flex: 1 1 0;
+        padding: 10px;
+        background: #ebebeb;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      button + button {
+        margin-left: 10px;
+      }
+    }
+  }
+  .box {
+    margin-top: 25px;
+    padding: 20px 18px;
+    border: 1px solid #ebebeb;
+    border-radius: 6px;
+    h3 {
+      font-size: 16px;
+    }
+    &.used-box {
+      div {
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+        p {
+          padding-top: 10px;
+          .date {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+            .bar {
+              margin: 0 2px;
+              color: #999;
+            }
+          }
+        }
+      }
+    }
+
+    &.loan-info {
+      border: none;
+      padding: 0;
+      ul {
+        overflow: hidden;
+        border: 1px solid #ebebeb;
+        border-radius: 6px;
+        li {
+          height: 108px;
+          button {
+            background: rgba(0, 0, 0,.15);
+            color: #fff;
+          }
+          width: 50%;
+          padding: 20px;
+          float: right;
+          box-sizing: border-box;
+          p {
+            font-size: 14px;
+          }
+          .sum {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px 0;
+            margin-bottom: 0;
+            .unit {
+              font-size: 14px;
+            }
+          }
+          .desc {
+            margin-top: 5px;
+            font-size: 12px;
+            line-height: 14px;
+            font-weight: bold;
+            color: #999;
+          }
+          &:nth-child(1) {
+            float: left;
+            height: 216px;
+            border-right: 1px solid #ebebeb;
+          }
+          &:nth-child(2) {
+            border-bottom: 1px solid #ebebeb;
+          }
+
+          .donut-wrap {
+            width: 110px;
+            margin: 0 auto;
+            position: relative;
+            .circular-chart {
+              display: block;
+              max-height:250px;
+              .circle-bg {
+                fill: none;
+                stroke: rgba(0, 0, 0, .12);
+                stroke-width: 0.5;
+              }
+              .circle {
+                fill: none;
+                stroke: #32b8e0;
+                stroke-width: 0.5;
+                stroke-linecap:round;
+                animation: progress .5s ease-out forwards;
+              }
+            }
+            .percentage {
+              position: absolute;
+              left: 0;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 100%;
+              font-size: 20px;
+              font-weight: bold;
+              letter-spacing: -1px;
+              text-align: center;
+              color: #333;
+            }
+          }
+          @keyframes progress {
+            0% {
+              stroke-dasharray: 0 100;
+            }
+          }
+        }
+      }
+    }
+
+    &.point {
+      padding: 0 20px;
+      li {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px 0;
+        font-size: 16px;
+        font-weight: bold;
+        border-top: 1px solid #ebebeb;
+        align-items: center;
+        p:nth-child(2) {
+          font-size: 20px;
+        }
+        &:first-child {
+          border-top: none;
+        }
+      }
+    }
+    &.hurdle-wrap {
+      > p {
+        margin-top: 8px;
+        font-size: 16px;
+        letter-spacing: -1px;
+        color: #666;
+      }
+      .hurdle {
+        margin-top: 20px;
+        .sum {
+          margin-bottom: 0;
+          color: #000;
+          font-size: 20px;
+          font-weight: bold;
+          text-align: right;
+          .unit {
+            font-size: 14px;
+          }
+        }
+        .progress-bar {
+          width: 100%;
+          progress {
+            display: inline-block;
+            width: 100%;
+            height: 4px;
+            background: none;
+            border: 0;
+            border-radius: 8px;
+            vertical-align: middle;
+          }
+          progress::-webkit-progress-bar {
+            height: 4px;
+            background: none;
+            border-radius: 8px;
+          }
+          progress::-webkit-progress-value {
+            height: 4px;
+            background: #32b8e0;
+            border-radius: 20px;
+          }
+        }
+
+        div {
+          display: flex;
+          p {
+            flex: 1 1 0;
+            padding-left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-left: 1px solid #ebebeb;
+            span {
+              display: block;
+              font-weight: normal;
+              color: #666;
+            }
+          }
+        }
+      }
+    }
+
+    &.benefit {
+      .box-list {
+        margin-top: 10px;
+        li {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 5px 0;
+          p {
+            font-size: 14px;
+            color: #000;
+            &:last-child {
+              font-size: 15px;
+              font-weight: bold;
+            }
+          }
+        }
+      }
+    }
   }
 }
+</style>
+
+<style lang="scss" scoped>
+.swiper-box {
+  // position: absolute;
+  // top: 0;
+  // left: 0;
+  // width: 100vw;
+  // z-index: 1;
+  .swiper-container {
+    .swiper-wrapper {
+      .swiper-slide.box {
+        max-height: 100vh;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 0;
+        .crop-wrapper {
+          /deep/ .crop {
+            .close {
+              position: absolute;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</style>
+
+<style lang="scss" scoped>
+.home {
+  position: relative;
+  padding-top: 70px;
+  padding-bottom: 220px;
+  // &.transform {
+  //   padding-top: 0;
+  // }
+  &.full {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
 /deep/ .box {
   background: #fff;
   margin: auto;
@@ -309,9 +980,11 @@ export default {
   }
   // .crop {}
   .image {
+    position: relative;
     padding: 20px 20px 60px;
     height: 434px;
     box-sizing: border-box;
+    overflow: hidden;
     p {
       &:nth-child(1) {
         font-size: 24px;
@@ -325,6 +998,18 @@ export default {
       &.desc + .desc {
         margin-top: 0;
       }
+    }
+    button {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: #333;
+      width: calc(100% - 40px);
+      padding: 12px 0;
+      border-radius: 4px;
+      -webkit-border-radius: 4px;
+      font-size: 15px;
+      color: #fff;
     }
   }
   .cont {
@@ -462,15 +1147,16 @@ export default {
     position: fixed;
     top: 12px;
     right: 15px;
-    width: 18px;
-    height: 18px;
+    width: 26px;
+    height: 26px;
     padding: 3px;
     background: #666;
-    font-size: 8px;
+    font-size: 9px;
     font-weight: bold;
     line-height: 8px;
     color: #fff;
     border-radius: 50%;
+    text-align: center;
   }
   .time {
     margin: 10px 10px 0 0;
@@ -554,7 +1240,10 @@ export default {
 // 1. box1
 /deep/ .box.box1 {
   .image {
-    background: #44b2b7;
+    background: url('../assets/images/box1_background2.gif');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center top;
     p {
       color: #fff;
     }
@@ -562,6 +1251,73 @@ export default {
   &.collapsed {
     .image {
       height: 200px;
+    }
+  }
+  &.expanded {
+    .image {
+      height: 434px;
+    }
+  }
+}
+
+// 2. box2
+/deep/ .box.box2 {
+  .image {
+    background: url('../assets/images/box2_background.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center top;
+    height: 434px;
+    p {
+      color: #fff;
+    }
+  }
+  .ad {
+    min-height: 300px;
+    background: #269e5c;
+    padding: 40px 10px 10px;
+    margin-top: 60px;
+    h2 {
+      text-align: center;
+      color: #000;
+    }
+    p {
+      margin-top: 15px;
+      font-size: 16px;
+      text-align: center;
+      color: #000;
+    }
+  }
+  .bottom {
+    padding: 40px 0;
+    margin-top: 50px;
+    background: #ebebeb;
+    text-align: center;
+    h3 {
+      font-size: 16px;
+      text-align: center;
+    }
+    .more {
+      margin-top: 10px;
+      text-align: center;
+    }
+  }
+}
+
+// 3. box3
+/deep/ .box.box3 {
+  .image {
+    background: url('../assets/images/box1_background2.gif');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center top;
+    p {
+      color: #fff;
+    }
+  }
+  &.collapsed {
+    .image {
+      height: 434px;
     }
   }
   &.expanded {
@@ -587,6 +1343,20 @@ export default {
     .close {
       display: none;
     }
+
+    .image {
+      p.full-txt {
+        display: none;
+      }
+      // p.bottom-txt {
+      //   position: absolute;
+      //   bottom: 20px;
+      //   left: 20px;
+      // }
+      button {
+        display: none;
+      }
+    }
   }
   &.expanded {
     width: 100%;
@@ -603,10 +1373,19 @@ export default {
     .close {
       display: block;
     }
+
+    .image {
+      p.full-txt {
+        display: block;
+      }
+      button {
+        display: block;
+      }
+    }
   }
   &.transform {
     // position: absolute;
-    // z-index: 3;
+    z-index: 3;
     border-radius: none !important;
     box-shadow: none;
     overflow: hidden;
@@ -643,6 +1422,11 @@ export default {
     box-shadow: none;
     .close {
       display: none;
+    }
+    .image {
+      button {
+        display: none !important;
+      }
     }
   }
 }
