@@ -13,6 +13,7 @@ html {
   background: #ebebeb;
   // height: 100%;
   overflow-x: hidden;
+  overscroll-behavior: none;
   &::-webkit-scrollbar {
     display: none !important;
   }

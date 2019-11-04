@@ -14,7 +14,7 @@
         class="box collapsed" :class="[`box${index}`, {'used-list': index === 0}]">
         <div class="box-wrapper" v-show="viewStatus === 'list'"
           @touchstart.self="scaleDown(index)"
-          @touchmove.self="relaseScale(index)"
+          @touchmove.self="releaseScale(index)"
           @touchend.self="expand(index)" />
         <div class="crop-wrapper" v-html="data.cropData"></div>
       </div>
@@ -26,123 +26,11 @@
           ref="swiperSlide"
           v-for="(data, index) in slideData" :key="`slidebox${index}`"
           class="box expanded" :class="[`box${index}`, {'used-list': index === 0}]"
-          @touchmove.native="checkSlideScroll($event)">
+          @touchend.native="releaseSlideScale(index)"
+          @touchcancel.native="releaseScale(index)">
           <div class="crop-wrapper" v-html="data.cropData"></div>
         </swiper-slide>
       </swiper>
-    </div>
-
-    <!-- @touchstart.prevent="preventAccountTouch"
-      @touchend.prevent="releaseAccountTouch" -->
-    <div
-      ref="accountBox" class="account-box" :class="[...accountBoxClass]">
-      <div ref="panHandler" class="pan-handle-wrapper" :class="[...accountBoxClass]">
-        <div class="pan-handle"></div>
-      </div>
-
-      <div class="sum">
-        <p class="date">
-          <span>9.12 결제금액</span>
-          <span class="small-sum">2,500,000<span class="unit">원</span></span>
-        </p>
-        <p class="sum">2,500,000<span class="unit">원</span></p>
-        <p class="btns">
-          <button>즉시결제</button>
-          <button>분할납부</button>
-          <button>최소결제</button>
-        </p>
-      </div>
-
-      <div class="box used-box">
-        <h3>최근 이용내역</h3>
-        <div>
-          <p>
-            <span>현대오일뱅크</span>
-            <span class="date">08.04 11:20 <span class="bar">|</span> 일시불</span>
-          </p>
-          <p>100,000</p>
-        </div>
-      </div>
-
-      <div class="box loan-info">
-        <ul>
-          <li>
-            <h3>잔여한도</h3>
-            <p class="sum">9,400,000<span class="unit">원</span></p>
-            <div class="donut-wrap">
-              <svg viewBox="0 0 36 36" class="circular-chart">
-                <path class="circle-bg"
-                  d="M18 2.0845
-                    a 15.9155 15.9155 0 0 1 0 31.831
-                    a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path class="circle"
-                  stroke-dasharray="75, 100"
-                  d="M18 2.0845
-                    a 15.9155 15.9155 0 0 1 0 31.831
-                    a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <p class="percentage">75%</p>
-            </div>
-          </li>
-
-          <li>
-            <h3>카드론</h3>
-            <p class="desc">장기카드대출</p>
-            <p class="sum">3,500<span class="unit">만원</span></p>
-          </li>
-
-          <li>
-            <h3>현금서비스</h3>
-            <p class="desc">단기카드대출</p>
-            <p class="sum">500<span class="unit">만원</span></p>
-          </li>
-        </ul>
-      </div>
-
-      <ul class="box point">
-        <li>
-          <p>M포인트</p>
-          <p>6,500</p>
-        </li>
-        <li>
-          <p>스마일 캐시</p>
-          <p>30,000</p>
-        </li>
-      </ul>
-
-      <div class="box hurdle-wrap">
-        <h3>M포인트 적립</h3>
-        <p>목적 달성 성공! M포인트 1.5배 달성 적립</p>
-        <div class="hurdle">
-          <p class="sum">2,500,000<span class="unit">원</span></p>
-          <p class="progress-bar"><progress value="100" max="100"></progress></p>
-          <div>
-            <p>미적립<span>50만원 미만</span></p>
-            <p>0.5 ~ 2%<span>50만원 이상</span></p>
-            <p>X1.5배<span>100만원 이상</span></p>
-          </div>
-        </div>
-      </div>
-
-      <div class="box benefit">
-        <h3>받은 혜택</h3>
-        <ul class="box-list">
-          <li>
-            <p>7월 적립 M포인트</p>
-            <p>12,700</p>
-          </li>
-          <li>
-            <p>7월 적립 스마일캐시</p>
-            <p>3,800</p>
-          </li>
-          <li>
-            <p>7월 누린 혜택</p>
-            <p>102,900원</p>
-          </li>
-        </ul>
-      </div>
     </div>
   </div>
 </template>
@@ -166,9 +54,9 @@ export default {
     activeIndex: 0,
     windowScrollTop: 0,
     showSwiper: false,
-    accountTranslateY: 0,
-    accountBoxStatus: 'detail',
     showList: true,
+    slideGMInitialized: false,
+    slideGestureManager: [],
   }),
   computed: {
     contentBoxClass() {
@@ -176,73 +64,9 @@ export default {
         `${this.viewStatus}`,
       ];
     },
-    accountBox() {
-      return this.$refs.accountBox;
-    },
-    accountBoxRect() {
-      return this.$refs.accountBox.getBoundingClientRect();
-    },
-    accountBoxClass() {
-      return [
-        `${this.accountBoxStatus}`,
-      ];
-    },
   },
-  watch: {
-    viewStatus() {
-      if (this.viewStatus === 'list') {
-        window.addEventListener('scroll', this.onScroll);
-      } else {
-        window.removeEventListener('scroll', this.onScroll);
-      }
-    },
-  },
+  watch: {},
   methods: {
-    setAccountBoxStatus(status) {
-      switch (status) {
-        case 'hide':
-          this.accountTranslateY = this.accountBoxRect.height;
-          break;
-        case 'detail':
-          this.accountTranslateY = 0;
-          break;
-        case 'small':
-          this.accountTranslateY = this.accountBoxRect.height - 100;
-          break;
-        case 'collapsed':
-          this.accountTranslateY = this.accountBoxRect.height - 180;
-          break;
-        default:
-          this.accountTranslateY = this.accountBoxRect.height - 180;
-          break;
-      }
-      if (status !== 'hide') {
-        this.accountBox.classList.remove('hide');
-        this.accountBoxStatus = status;
-        if (status === 'small' || status === 'collapsed') {
-          this.accountBox.scrollTo(0, 0);
-        }
-      } else {
-        this.accountBox.classList.add('hide');
-      }
-
-      if (status === 'detail') {
-        document.scrollingElement.style.position = 'fixed';
-        document.scrollingElement.style.width = '100%';
-        document.scrollingElement.style.overflow = 'hidden';
-      } else {
-        document.scrollingElement.style.position = '';
-        document.scrollingElement.style.overflow = '';
-      }
-      Velocity(this.accountBox,
-        {
-          translateY: this.accountTranslateY,
-        },
-        {
-          duration: 200,
-          easing: 'ease',
-        });
-    },
     scaleDown(index) {
       if (this.viewStatus !== 'list') {
         return;
@@ -277,7 +101,7 @@ export default {
         // });
       }
     },
-    relaseScale(index) {
+    releaseScale(index) {
       if (this.viewStatus !== 'list') {
         return;
       }
@@ -299,8 +123,9 @@ export default {
 
       const data = this.slideData[index];
       if (data.status === 'scaleDown') {
+        // document.scrollingElement.style.overflow = 'hidden';
+        // document.scrollingElement.scrollTo(0, this.windowScrollTop);
         this.hideMenu();
-        this.setAccountBoxStatus('hide');
         const el = this.$refs.cropBox[index];
 
         const calcTop = data.style['--current-top'].charAt(0) === '-'
@@ -324,7 +149,8 @@ export default {
           { translateY: target.top, scale: 1 },
           {
             duration: 500,
-            easing: [0.18, 0.89, 0.32, 1.1],
+            // easing: [0.18, 0.89, 0.32, 1.1],
+            easing: [0.5, 0.22, -0.06, 1],
             queue: false,
           });
         Velocity(el,
@@ -334,7 +160,8 @@ export default {
           {
             duration: 300,
             delay: 50,
-            easing: [0.18, 0.89, 0.32, 1.1],
+            // easing: [0.18, 0.89, 0.32, 1.1],
+            easing: [0.5, 0.22, -0.06, 1],
             queue: false,
           });
         Velocity(el,
@@ -344,7 +171,8 @@ export default {
           {
             duration: 400,
             delay: 100,
-            easing: [0.18, 0.89, 0.32, 1.1],
+            // easing: [0.18, 0.89, 0.32, 1.1],
+            easing: [0.5, 0.22, -0.06, 1],
             queue: false,
           })
           .then(() => {
@@ -367,6 +195,10 @@ export default {
             this.showSwiper = true;
             setTimeout(() => {
               this.showList = false;
+
+              if (!this.slideGMInitialized) {
+                this.initSlideGestureManager();
+              }
             }, 100);
           });
       }
@@ -376,6 +208,9 @@ export default {
       this.showList = true;
       setTimeout(() => {
         this.showSwiper = false;
+        this.$refs.hSwiper.swiper.slides.each((index, slide) => {
+          slide.style.transform = '';
+        });
       }, 100);
       // debugger;
       setTimeout(() => {
@@ -397,7 +232,6 @@ export default {
         this.viewStatus = 'list';
 
         this.showMenu();
-        this.setAccountBoxStatus(this.accountBoxStatus);
 
         document.scrollingElement.scrollTo(0, this.windowScrollTop);
 
@@ -425,7 +259,8 @@ export default {
           },
           {
             duration: 400,
-            easing: [0.29, 0.78, 0.51, 0.92],
+            // easing: [0.29, 0.78, 0.51, 0.92],
+            easing: [0.5, 0.22, -0.06, 1],
             // easing: 'ease',
             queue: false,
           })
@@ -436,6 +271,10 @@ export default {
             el.style.height = '';
             el.classList.add('collapsed');
             el.classList.remove('collapsing');
+            // document.scrollingElement.style.overflow = '';
+            // console.log(this.$refs.hSwiper.swiper.activeIndex);
+            // const swiperActiveIdx = this.$refs.hSwiper.swiper.activeIndex;
+            // this.slideGestureManager[swiperActiveIdx].onTransition = false;
           });
       }, 10);
     },
@@ -452,87 +291,128 @@ export default {
       el.classList.add('show');
       // Velocity(el, { translateY: '0px' }, { duration: 200, easing: 'ease' });
     },
-    onScroll() {
-      if (this.viewStatus === 'list') {
-        const { scrollTop } = document.scrollingElement;
-        if (this.accountBoxStatus === 'collapsed' && scrollTop > 100) {
-          this.setAccountBoxStatus('small');
-        } else if (this.accountBoxStatus === 'small' && scrollTop <= 100) {
-          this.setAccountBoxStatus('collapsed');
-        }
-      }
-    },
-    initAccountBoxGesture() {
-      // const { accountBox } = this;
-      const { panHandler } = this.$refs;
-      const mc = new Hammer(panHandler);
-      // mc.get('pan').set({ direction: Hammer.DIRECTION_VERTICAL });
-      mc.get('swipe').set({ direction: Hammer.DIRECTION_VERTICAL });
-      // mc.on('pan', (ev) => {
-      //   if (Math.abs(ev.velocity) > 1) {
-      //     if (ev.deltaY < 0) {
-      //       this.setAccountBoxStatus('detail');
-      //     } else {
-      //       this.setAccountBoxStatus('collapsed');
-      //     }
-      //   } else {
-      //     let targetY;
-      //     if (ev.deltaY < 0) {
-      //       targetY = Math.max(this.accountTranslateY + ev.deltaY, 0);
-      //     } else {
-      //       targetY = Math.min(this.accountTranslateY + ev.deltaY, this.accountBoxRect.height - 100);
-      //     }
-
-      //     Velocity(this.accountBox,
-      //       {
-      //         translateY: targetY,
-      //       },
-      //       {
-      //         duration: 0,
-      //         queue: false,
-      //       });
-      //   }
-      // });
-      mc.on('swipe', (ev) => {
-        // console.log(ev);
-        if (ev.deltaY < 0) {
-          this.setAccountBoxStatus('detail');
-        } else {
-          this.setAccountBoxStatus('collapsed');
-        }
-      });
-    },
-    initSwiperBoxGesture() {
-      // const { swiperBox } = this.$refs;
-      // const mc = new Hammer(swiperBox);
-      // mc.get('swipe').set({ direction: Hammer.DIRECTION_DOWN });
-      // mc.on('swipe', (ev) => {
-      //   this.collapse();
-      // });
-      // this.$refs.swiperSlide.forEach((slideComponent) => {
-      //   const el = slideComponent.$el;
-      //   const mc = new Hammer(el);
-      //   mc.get('swipe').set({ direction: Hammer.DIRECTION_DOWN, touchAction: 'pan-y' });
-      //   mc.on('swipe', (ev) => {
-      //     // console.log(ev);
-      //     // if (ev.deltaY > 0) {
-      //     this.collapse();
-      //     // }
-      //   });
-      // });
-    },
-    preventAccountTouch() {
-      // console.log('prevent account touch');
-      document.scrollingElement.style.overflow = 'hidden';
-    },
-    releaseAccountTouch() {
-      // console.log('account touch end');
-      // document.scrollingElement.style.overflow = '';
-      const { y } = this.accountBox.getBoundingClientRect();
-      this.accountTranslateY = y;
-    },
     checkSlideScroll($event) {
       console.log($event);
+    },
+    initSlideGestureManager() {
+      if (this.slideGMInitialized) {
+        return;
+      }
+      this.slideGMInitialized = true;
+      const { slides } = this.$refs.hSwiper.swiper;
+      slides.each((index, slide) => {
+        const gm = new Hammer(slide, { touchAction: 'pan-y pan-x' });
+        // const gm = new Hammer(slide);
+
+        const obj = {
+          managerObj: gm,
+          onTransition: false,
+        };
+
+        this.slideGestureManager[index] = obj;
+
+
+        // gm.add(pan);
+
+        // gm.on('swipe');
+
+        gm.get('pan').set({ direction: Hammer.DIRECTION_DOWN });
+        gm.on('pandown', (ev) => {
+          const angle = Math.abs(ev.angle);
+          console.log('deltaY:', Math.abs(ev.deltaY), 'velocity:', ev.velocity, 'angle:', angle);
+
+          if (slide.scrollTop === 0 && angle >= 80 && angle <= 120) {
+            if (ev.velocity >= 0.25) {
+              // this.slideGestureManager[index].onTransition = true;
+              this.collapse();
+            } else if (!this.slideGestureManager[index].onTransition) {
+              // const scaleValue = Math.max(1 - (Math.abs(ev.deltaY) * 0.0018), 0.95);
+              
+              // Velocity(slide,
+              //   {
+              //     scale: scaleValue,
+              //   },
+              //   {
+              //     duration: 0,
+              //     queue: false,
+              //   });
+            }
+          }
+        });
+
+        // gm.get('swipe').set({ direction: Hammer.DIRECTION_DOWN });
+        // gm.on('swipedown', (ev) => {
+        //   console.log('swipe', ev);
+        //   this.collapse();
+        // });
+
+
+        // gm.get('pan').set({ direction: Hammer.DIRECTION_DOWN });
+        // gm.get('swipe').set({ direction: Hammer.DIRECTION_VERTICAL });
+        // gm.on('pandown', (ev) => {
+        //   if (slide.scrollTop === 0 && ev.isFinal) {
+        //     const scaleValue = Math.max(1 - (Math.abs(ev.deltaY) * 0.0006), 0.95);
+        //     console.log(ev);
+        //     console.log(ev.deltaY, ev.velocity, scaleValue);
+
+        //     if (ev.velocity >= 1) {
+        //       this.collapse();
+        //     } else if (Math.abs(ev.deltaY) > 1000) {
+        //       this.collapse();
+        //     } else if (!this.slideGestureManager[index].onTransition) {
+        //       this.slideGestureManager[index].onTransition = true;
+        //       Velocity(slide,
+        //         {
+        //           scale: scaleValue,
+        //         },
+        //         {
+        //           duration: 500,
+        //           easing: 'ease',
+        //         })
+        //         .then(() => {
+        //           this.slideGestureManager[index].onTransition = false;
+        //         });
+        //     }
+        //   }
+
+        //   // if (
+        //   //   slide.scrollTop === 0
+        //   //   // && ev.isFinal
+        //   //   && Math.abs(ev.deltaY) > 30
+        //   //   && ev.velocity > 0.3
+        //   // ) {
+        //   //   this.collapse();
+        //   // } else {
+        //   // const scaleValue = Math.max(1 - (Math.abs(ev.deltaY) * 0.0006), 0.97);
+
+        //   // const scaleValue = (1 - (Math.abs(ev.deltaY) * 0.0001));
+        //   // slide.style.transform = `scale(${scaleValue})`;
+
+        //   // }
+        //   // else if (!ev.isFinal) {
+        //   //   if (Math.abs(ev.deltaY) > 100) {
+        //   //     this.collapse();
+        //   //     return;
+        //   //   }
+        //   //   // console.log(ev.deltaY);
+        //   //   const scaleValue = ev.deltaY * 0.0006;
+        //   //   slide.style.transform = `scale(${1 - scaleValue})`;
+        //   // }
+        // });
+        // this.slideGestureManager.push(gm);
+        // gm.get('pan').set({ enable: false });
+      });
+    },
+    releaseSlideScale(index) {
+      const slide = this.$refs.hSwiper.swiper.slides[index];
+      Velocity(slide,
+        {
+          scale: 1,
+        },
+        {
+          duration: 400,
+          easing: 'ease',
+        });
     },
   },
   mounted() {
@@ -551,25 +431,25 @@ export default {
     window.homeVm = this;
 
     // accountBox initial setting;
-    const { height } = this.accountBoxRect;
-    this.accountTranslateY = height - 180;
+    // const { height } = this.accountBoxRect;
+    // this.accountTranslateY = height - 180;
 
-    Velocity(this.accountBox,
-      { translateY: this.accountTranslateY },
-      {
-        duration: 300,
-        delay: 1200,
-        easing: 'ease',
-      })
-      .then(() => {
-        this.accountBoxStatus = 'collapsed';
-      });
+    // Velocity(this.accountBox,
+    //   { translateY: this.accountTranslateY },
+    //   {
+    //     duration: 300,
+    //     delay: 1200,
+    //     easing: 'ease',
+    //   })
+    //   .then(() => {
+    //     this.accountBoxStatus = 'collapsed';
+    //   });
 
-    window.addEventListener('scroll', this.onScroll);
-    this.initAccountBoxGesture();
-    setTimeout(() => {
-      this.initSwiperBoxGesture();
-    }, 1000);
+    // window.addEventListener('scroll', this.onScroll);
+    // this.initAccountBoxGesture();
+    // setTimeout(() => {
+    //   this.initSlideGestureManager();
+    // }, 1000);
   },
 };
 </script>
