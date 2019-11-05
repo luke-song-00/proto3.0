@@ -1,6 +1,6 @@
 <template>
-  <div class="home">
-    <div ref="menuNav" class="top-menu">
+  <div class="home" :class="[...contentBoxClass]">
+    <div ref="topMenu" class="top-menu show">
       <button>M</button>
       <p>
         <button>S</button>
@@ -9,294 +9,815 @@
       </p>
     </div>
 
-    <div class="content-box">
-
-      <div class="box used-list">
-        <div class="crop">
-          <p class="preview">1시간 전에 현대해상에서 <br>여행자보험 9,000원 결제 하셨어요.</p>
-          <div class="cont">
-            <h2>최근 이용내역</h2>
-
-            <div class="list-wrap">
-              <p class="date">6일 수요일 (오늘)</p>
-              <div class="list">
-                <div>
-                  <p>현대해상 여행자 보험</p>
-                  <span>오늘 09:13<span class="bar">|</span>일시불</span>
-                </div>
-                <p>19,000원</p>
-              </div>
-            </div>
-
-            <div class="list-wrap">
-              <p class="date">4일 월요일</p>
-              <div class="list">
-                <div>
-                  <p>현대백화점</p>
-                  <span>08.04 15:45<span class="bar">|</span>일시불</span>
-                </div>
-                <p>139,000원</p>
-              </div>
-            </div>
-
-            <div class="list-wrap">
-              <p class="date">4일 월요일</p>
-              <div class="list">
-                <div>
-                  <p>현대백화점</p>
-                  <span>08.04 15:45<span class="bar">|</span>일시불</span>
-                </div>
-                <p>139,000원</p>
-              </div>
-              <div class="list">
-                <div>
-                  <p>현대오일뱅크</p>
-                  <span>08.04 11:20<span class="bar">|</span>일시불</span>
-                </div>
-                <p>100,000원</p>
-              </div>
-              <div class="list">
-                <div>
-                  <p>CU편의점</p>
-                  <span>08.04 09:45<span class="bar">|</span>일시불</span>
-                </div>
-                <p>4,300원</p>
-              </div>
-            </div>
-
-            <div class="list-wrap">
-              <p class="date">2일 토요일</p>
-              <div class="list">
-                <div>
-                  <p>폴바셋</p>
-                  <span>08.02 12:45<span class="bar">|</span>일시불</span>
-                </div>
-                <p>5,800원</p>
-              </div>
-              <div class="list">
-                <div>
-                  <p>아웃백스테이크하우스</p>
-                  <span>08.02 11:45<span class="bar">|</span>일시불</span>
-                </div>
-                <p>63,700원</p>
-              </div>
-            </div>
-
-            <p class="more">
-              <button>이용내역 더보기</button>
-            </p>
-          </div>
-          <button class="close">X</button>
-        </div>
+    <div class="content-box" v-show="showList" :class="[...contentBoxClass]">
+      <div ref="cropBox" v-for="(data, index) in slideData" :key="`cropbox${index}`"
+        class="box collapsed" :class="[`box${index}`, {'used-list': index === 0}]">
+        <div class="box-wrapper" v-show="viewStatus === 'list'"
+          @touchstart.self="scaleDown(index)"
+          @touchmove.self="releaseScale(index)"
+          @touchend.self="expand(index)" />
+        <div class="crop-wrapper" v-html="data.cropData"></div>
       </div>
-
-      <div class="box box1">
-        <div class="crop">
-          <div class="image">
-            <p>여행 준비는<br>마치셨나요?</p>
-            <p class="desc">여행에 도움이 되는<br>머니 팁 먼저 확인하세요</p>
-          </div>
-          <div class="cont">
-            <div>
-              <h2>휴가철 현대카드 사용백서</h2>
-              <p>
-                '직장인에게 허락된 유일한 마약'. 여름 휴가철이 코앞입니다.
-                여행지를 정하고, 코스를 짜고, 항공권과 호텔 예약까지. 정해야 할 게 한두 개가 아니죠.
-                <br>기분 좋은 고민이지만, 최소한 여행지에서 신용카드와 관련된 고민은 덜 수 있도록,
-                당신이 떠나기 전 미리 알아두면 좋은 신용카드 활용법을 소개합니다.
-              </p>
-
-              <h2>성수기 호텔 할인</h2>
-              <ul class="box-list icon">
-                <li>
-                  <p>현대카드 전용 프로모션 사이트<br>결제시 12% 즉시 할인</p>
-                </li>
-                <li>
-                  <p>현대카드 전용 프로모션 사이트<br>전용 쿠폰 발급</p>
-                </li>
-                <li>
-                  <p>야놀자 앱 결제시<br>M포인트 10% 사용</p>
-                </li>
-              </ul>
-              <p class="more">
-                <button>더 알아보기</button>
-              </p>
-
-              <h2>면세점 무이자 할부 혜택</h2>
-              <ul class="box-list icon">
-                <li>
-                  <p>매주 월 화목 30% 즉시 할인<br>매주 월요일 결제금액의 50%<br>M포인트 사용</p>
-                </li>
-                <li>
-                  <p>항공 여행 업종 5만원 이상<br>결제 시 2~6개월 무이자 할부<br>그 외 가맹점 ~3개월 무이자 할부</p>
-                </li>
-              </ul>
-              <p class="more">
-                <button>더 알아보기</button>
-              </p>
-
-              <h2>유의사항</h2>
-              <ul class="bul-list">
-                <li>M포인트 사용 혜택은 M계열카드에 한해 제공 됩니다.</li>
-                <li>상기 혜택은 당사 및 제휴사 사정에 의해 변경 또는 중단 가능합니다.</li>
-                <li>할인, 쿠폰 및 무이자할부 적용 기준은 해당 대상점에 따라 적용됩니다.</li>
-                <li>모든 가맹점은 현대카드 가맹점 등록 업종 기준입니다.</li>
-              </ul>
-            </div>
-          </div>
-          <button class="close">X</button>
-        </div>
-        <p class="time">19.08.05 오후 04:10</p>
-      </div>
-
-      <div class="box box2">
-        <div class="crop">
-          <div class="image">
-            <p>여행을 즐기신다면<br>Green 카드</p>
-            <p class="desc">M포인트 적립, 바우처 제공,<br>프리미엄 소재 카드까지</p>
-            <button>신청</button>
-          </div>
-          <div class="cont">
-            <div>
-              <h2>M포인트 적립</h2>
-              <ul class="box-list">
-                <li>
-                  <p class="num"><strong>1</strong>%</p>
-                  <p>국내외 가맹점에서 1% M포인트 적립</p>
-                </li>
-                <li>
-                  <p class="num"><strong>1.5</strong>배</p>
-                  <p>100만원 이상 이용시 1.5배 적립</p>
-                </li>
-                <li>
-                  <p class="num"><strong>2</strong>배</p>
-                  <p>200만원 이상 이용 시 2배 적립</p>
-                </li>
-              </ul>
-              <p class="more">
-                <button>더 알아보기</button>
-              </p>
-
-              <h2>M포인트 특별적립</h2>
-              <ul class="box-list icon">
-                <li>항공사, 여행사, 특급호텔<br>전 업종 5% 적립</li>
-                <li>현대카드 My Menu앱에<br>등록된 맛집 전체 5% 적립</li>
-                <li>해외 현지 및 해외<br>온라인 가맹점 5% 적립</li>
-              </ul>
-              <p class="more">
-                <button>더 알아보기</button>
-              </p>
-
-              <div class="ad">
-                <h2>바우처</h2>
-                <p>M포인트로 현대카드 PRIVIA 여행, 롯데면세점,<br>국내 특급 호텔에서 사용 가능한<br>the Green 바우처 교환</p>
-              </div>
-
-              <h2>연간 리워드</h2>
-              <ul class="box-list click">
-                <li>
-                  <p>5만 M포인트 연간 보너스 적립</p>
-                  <span>연간 600만원 이상 이용 시 제공</span>
-                </li>
-                <li>
-                  <p>5 10만원 이용연차에 따른 차등 적용</p>
-                  <span>연간 600만원 이상 이용 시 제공</span>
-                  <span>발급 2차년도 이후 5만원 갱신 이후 10만원</span>
-                  <span>본인카드 연회비 면제</span>
-                </li>
-              </ul>
-
-              <h2>프리미엄서비스</h2>
-              <ul class="box-list icon">
-                <li>가장 화폐다운 소재<br>코팔플레이트 제공</li>
-                <li>항공권 무료 업그레이드 등<br>서비스 제공</li>
-                <li>인천국제공항 국내<br>특급호텔 무료 발레파킹</li>
-                <li>그린 회원전용<br>상담 데스크</li>
-              </ul>
-              <p class="more">
-                <button>더 알아보기</button>
-              </p>
-
-              <h2>99%가 놓치는 혜택<br>영상으로 알아보기</h2>
-
-              <div class="bottom">
-                <h3>VISA MasterCard 서비스</h3>
-                <p class="more">
-                  <button>더 알아보기</button>
-                </p>
-              </div>
-
-            </div>
-          </div>
-          <button class="close">X</button>
-        </div>
-        <p class="time">19.08.04 오후 02:00</p>
-      </div>
-
-      <div class="box box3">
-        <div class="crop">
-          <div class="image">
-            <p>TROP.COM<br>15% 할인 이벤트</p>
-            <p class="desc full-txt">트립닷컴에서 현대카드로<br>결제하면 엄청난 할인이!</p>
-            <p class="desc">19.07.23 ~ 08.02</p>
-            <button>참여</button>
-          </div>
-        </div>
-      </div>
-
     </div>
+
+    <!-- <div ref="swiperBox" class="swiper-box" v-show="showSwiper">
+      <swiper ref="hSwiper" :options="swiperOptions">
+        <swiper-slide
+          ref="swiperSlide"
+          v-for="(data, index) in slideData" :key="`slidebox${index}`"
+          class="box expanded" :class="[`box${index}`, {'used-list': index === 0}]"
+          @touchmove.native="touchMoveOnSlide(index)"
+          @touchend.native="releaseSlideScale(index)"
+          @touchcancel.native="releaseScale(index)">
+          <div class="crop-wrapper" v-html="data.cropData"></div>
+        </swiper-slide>
+      </swiper>
+    </div> -->
   </div>
 </template>
 
 <script>
+import Velocity from 'velocity-animate';
+import Hammer from 'hammerjs';
+// import SLIDE_DATA from '@/store/slideData';
+import SLIDE_DATA from '@/store/slideData2';
 
 export default {
   name: 'home',
+  data: () => ({
+    importedSlideData: SLIDE_DATA,
+    slideData: [],
+    viewStatus: 'list',
+    // viewStatus: 'full',
+    // vSwiperOptions: {
+    //   direction: 'vertical',
+    //   initialSlide: 1,
+    //   allowSlideNext: false,
+    //   nested: true,
+    // },
+    swiperOptions: {
+      spaceBetween: 5,
+    },
+    activeIndex: 0,
+    windowScrollTop: 0,
+    showSwiper: false,
+    showList: true,
+    slideGMInitialized: false,
+    slideGestureManager: [],
+  }),
+  computed: {
+    contentBoxClass() {
+      return [
+        `${this.viewStatus}`,
+      ];
+    },
+  },
+  watch: {},
+  methods: {
+    scaleDown(index) {
+      if (this.viewStatus !== 'list') {
+        return;
+      }
+
+      const data = this.slideData[index];
+      if (data.status === 'initial') {
+        const el = this.$refs.cropBox[index];
+        // const el = this.$refs.cropBox;
+        const rect = el.getBoundingClientRect();
+        data.style['--current-top'] = `${rect.y}px`;
+        data.style['--current-left'] = `${rect.x}px`;
+        data.style['--current-width'] = `${rect.width}px`;
+        data.style['--current-height'] = `${rect.height}px`;
+        Velocity(el, {
+          width: data.style['--current-width'],
+          height: data.style['--current-height'],
+          translateY: '0px',
+          translateX: '0px',
+        }, { duration: 0 });
+        // el.style.width = data.style['--current-width'];
+        // el.style.height = data.style['--current-height'];
+
+        this.$nextTick(() => {
+          this.slideData[index].status = 'scaleDown';
+          Velocity(el, { scale: 0.97 }, { duration: 150, easing: 'ease' });
+        });
+        // this.$nextTick(() => {
+        //   this.slideData[index].status = 'scaleDown';
+        //   el.style.transition = 'transform 150ms ease';
+        //   el.style.transform = 'scale(0.97)';
+        // });
+      }
+    },
+    releaseScale(index) {
+      if (this.viewStatus !== 'list') {
+        return;
+      }
+
+      const data = this.slideData[index];
+      if (data.status === 'scaleDown') {
+        const el = this.$refs.cropBox[index];
+        // const el = this.$refs.cropBox;
+        this.slideData[index].status = 'initial';
+        Velocity(el, { scale: 1 }, { duration: 150, easing: 'ease' });
+      }
+    },
+    expand(index) {
+      if (this.viewStatus !== 'list') {
+        return;
+      }
+
+      this.windowScrollTop = document.scrollingElement.scrollTop;
+
+      const data = this.slideData[index];
+      if (data.status === 'scaleDown') {
+        // document.scrollingElement.style.overflow = 'hidden';
+        // document.scrollingElement.scrollTo(0, this.windowScrollTop);
+        this.hideMenu();
+        const el = this.$refs.cropBox[index];
+
+        const calcTop = data.style['--current-top'].charAt(0) === '-'
+          ? data.style['--current-top'].replace('-', '')
+          : `-${data.style['--current-top']}`;
+        const calcLeft = data.style['--current-left'].charAt(0) === '-'
+          ? data.style['--current-left'].replace('-', '')
+          : `-${data.style['--current-left']}`;
+
+        const target = {
+          top: calcTop,
+          left: calcLeft,
+          width: '100vw',
+          height: '100vh',
+        };
+
+        el.classList.add('transform');
+        el.classList.remove('collapsed');
+        this.viewStatus = 'transform';
+        Velocity(el,
+          { translateY: target.top, scale: 1 },
+          {
+            duration: 500,
+            // easing: [0.18, 0.89, 0.32, 1.1],
+            easing: [0.5, 0.22, -0.06, 1],
+            queue: false,
+          });
+        Velocity(el,
+          {
+            width: target.width,
+          },
+          {
+            duration: 300,
+            delay: 50,
+            // easing: [0.18, 0.89, 0.32, 1.1],
+            easing: [0.5, 0.22, -0.06, 1],
+            queue: false,
+          });
+        Velocity(el,
+          {
+            height: target.height,
+          },
+          {
+            duration: 400,
+            delay: 100,
+            // easing: [0.18, 0.89, 0.32, 1.1],
+            easing: [0.5, 0.22, -0.06, 1],
+            queue: false,
+          })
+          .then(() => {
+            this.$refs.cropBox.forEach((cropEl, cropIdx) => {
+              if (cropIdx !== index) {
+                cropEl.classList.add('hidden');
+              }
+            });
+            document.scrollingElement.scrollTo(0, 0);
+            el.style.transform = '';
+            el.style.width = '';
+            el.style.height = '';
+            el.classList.remove('transform');
+            el.classList.add('expanded');
+            data.status = 'expanded';
+            this.viewStatus = 'full';
+            this.activeIndex = index;
+            // this.$refs.hSwiper.swiper.slideTo(this.activeIndex, 0);
+
+            // this.showSwiper = true;
+            setTimeout(() => {
+              // this.showList = false;
+
+              // if (!this.slideGMInitialized) {
+              //   this.initSlideGestureManager();
+              // }
+            }, 100);
+          });
+      }
+    },
+
+    collapse() {
+      // this.showList = true;
+      // setTimeout(() => {
+      //   this.showSwiper = false;
+      //   this.$refs.hSwiper.swiper.slides.each((index, slide) => {
+      //     slide.style.transform = '';
+      //   });
+      // }, 100);
+      // debugger;
+      setTimeout(() => {
+        const index = this.activeIndex;
+        const data = this.slideData[index];
+        const el = this.$refs.cropBox[index];
+
+        // const initialTop = data.style['--current-top'];
+        // const initialLeft = data.style['--current-left'];
+        const initialWidth = data.style['--current-width'];
+        const initialHeight = data.style['--current-height'];
+
+        el.classList.remove('expanded');
+        el.classList.add('collapsing');
+        this.$refs.cropBox.forEach((cropEl) => {
+          cropEl.classList.remove('hidden');
+        });
+
+        this.viewStatus = 'list';
+
+        this.showMenu();
+
+        document.scrollingElement.scrollTo(0, this.windowScrollTop);
+
+        Velocity(el,
+          {
+            height: initialHeight,
+          },
+          {
+            duration: 400,
+            easing: 'ease',
+            queue: false,
+          });
+        Velocity(el,
+          {
+            width: initialWidth,
+          },
+          {
+            duration: 400,
+            easing: 'ease',
+            queue: false,
+          });
+        Velocity(el,
+          {
+            translateY: 0,
+          },
+          {
+            duration: 600,
+            // easing: [0.29, 0.78, 0.51, 0.92],
+            easing: [0.5, 0.22, -0.06, 1],
+            // easing: 'ease',
+            queue: false,
+          })
+          .then(() => {
+            data.status = 'initial';
+            el.style.transform = '';
+            el.style.width = '';
+            el.style.height = '';
+            el.classList.add('collapsed');
+            el.classList.remove('collapsing');
+            // document.scrollingElement.style.overflow = '';
+            // console.log(this.$refs.hSwiper.swiper.activeIndex);
+            // const swiperActiveIdx = this.$refs.hSwiper.swiper.activeIndex;
+            // this.slideGestureManager[swiperActiveIdx].onTransition = false;
+          });
+      }, 10);
+    },
+
+    hideMenu() {
+      const el = this.$refs.topMenu;
+      el.classList.remove('show');
+      el.classList.add('hide');
+      // Velocity(el, { translateY: '-70px' }, { duration: 200, easing: 'ease' });
+    },
+    showMenu() {
+      const el = this.$refs.topMenu;
+      el.classList.remove('hide');
+      el.classList.add('show');
+      // Velocity(el, { translateY: '0px' }, { duration: 200, easing: 'ease' });
+    },
+
+    initCropBoxGestureManager() {
+      this.$refs.cropBox.forEach((cropboxEl, index) => {
+        const gm = new Hammer(cropboxEl, { touchAction: 'auto' });
+        // const gm = new Hammer(cropboxEl);
+
+        gm.get('pan').set({ direction: Hammer.DIRECTION_VERTICAL });
+        gm.on('pandown panup', (ev) => {
+          const angle = Math.abs(ev.angle);
+          console.log('deltaY:', Math.abs(ev.deltaY), 'velocity:', ev.velocity, 'angle:', angle);
+          if (document.scrollingElement.scrollTop === 0 && angle >= 80 && angle <= 120) {
+            if (ev.velocity >= 0.1) {
+              // this.slideGestureManager[index].onTransition = true;
+              const rect = cropboxEl.getBoundingClientRect();
+              console.log(rect);
+              // Velocity(cropboxEl, { translateY: rect.y }, { duration: 0, queue: false });
+              this.collapse();
+            }
+            // else {
+            //   // const scaleValue = Math.max(1 - (Math.abs(ev.deltaY) * 0.0018), 0.95);
+            //   const scaleValue = 1 - Math.abs(ev.deltaY) * 0.0006;
+            //   Velocity(cropboxEl,
+            //     {
+            //       // translateY: 0,
+            //       scale: scaleValue,
+            //     },
+            //     {
+            //       duration: 0,
+            //       queue: false,
+            //     });
+            // }
+          }
+        });
+
+        gm.on('panend pancancel', () => {
+          Velocity(cropboxEl,
+            {
+              translateY: 0,
+              scale: 1,
+            },
+            {
+              duration: 300,
+              easing: 'ease',
+              queue: false,
+            });
+        });
+      });
+    },
+    
+    releaseSlideScale(index) {
+      const slide = this.$refs.hSwiper.swiper.slides[index];
+      Velocity(slide,
+        {
+          scale: 1,
+          // borderRadius: 'none',
+        },
+        {
+          duration: 400,
+          easing: 'ease',
+        });
+    },
+    touchMoveOnSlide(index) {
+      // console.log('touch move');
+    },
+  },
+  mounted() {
+    this.slideData = this.importedSlideData.map(data => ({
+      ...data,
+      status: 'initial',
+      style: {
+        '--current-top': '0px',
+        '--current-left': '0px',
+        '--current-width': '0px',
+        '--current-height': '0px',
+      },
+    }));
+
+    window.collapse = this.collapse;
+    window.homeVm = this;
+
+    // accountBox initial setting;
+    // const { height } = this.accountBoxRect;
+    // this.accountTranslateY = height - 180;
+
+    // Velocity(this.accountBox,
+    //   { translateY: this.accountTranslateY },
+    //   {
+    //     duration: 300,
+    //     delay: 1200,
+    //     easing: 'ease',
+    //   })
+    //   .then(() => {
+    //     this.accountBoxStatus = 'collapsed';
+    //   });
+
+    // window.addEventListener('scroll', this.onScroll);
+    // this.initAccountBoxGesture();
+    // setTimeout(() => {
+    //   this.initSlideGestureManager();
+    // }, 1000);
+    // document.scrollingElement.style.overflow = 'hidden';
+    setTimeout(() => {
+      this.initCropBoxGestureManager();
+    }, 500);
+  },
 };
 </script>
 
 <style lang="scss" scoped>
-.home {
-  padding: 65px 20px 20px;
-  background: #ebebeb;
-}
+$wH: 100vh;
+$heightPadding: 60px;
+$headerHeight: 180px;
+$height: calc(#{$wH} - #{$heightPadding});
+$bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
 
-.top-menu {
+.account-box {
+  // display: none;
   position: fixed;
-  top: 20px;
-  left: 20px;
-  overflow: hidden;
-  width: calc(100% - 40px);
+  width: 100vw;
+  height: $height;
+  background: #fff;
+  border-top-right-radius: 12px;
+  border-top-left-radius: 12px;
   z-index: 5;
-  button {
-    background: #ebebeb;
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-    text-align: center;
+  box-shadow: 1px 1px 10px 6px rgba(0, 0, 0, .12);
+  box-sizing: border-box;
+  padding: 0 20px 20px;
+  overflow-y: scroll;
+  bottom: 0;
+  will-change: transform;
+  -webkit-overflow-scrolling: touch;
+
+  &.small, &.collapsed, &.hide {
+    overflow: hidden;
+    div.sum {
+      margin-top: 20px;
+    }
   }
-  button + button {
-    margin-left: 5px;
+
+  &.small {
+    div.sum {
+      .date {
+        span.small-sum {
+          opacity: 1;
+        }
+      }
+      p.sum {
+        opacity: 0;
+      }
+    }
   }
-  > button {
-    float: left;
+
+  &.hide {
+    box-shadow: none;
   }
-  p {
-    float: right;
+
+  .pan-handle-wrapper {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    display: flex;
+    background: #fff;
+    .pan-handle {
+      margin: auto;
+      width: 50px;
+      height: 4px;
+      background: rgba(0, 0, 0, .12);
+      border-radius: 18px;
+    }
+
+    &.collapsed, &.small, &.hide {
+      position: absolute;
+      height: 100%;
+      background: transparent;
+      .pan-handle {
+        margin-top: 10px;
+      }
+    }
+
+    &.detail {
+      position: sticky;
+      height: 20px;
+      background: #fff;
+    }
+  }
+
+  div.sum {
+    margin-top: 10px;
+    margin-bottom: 35px;
+    .date {
+      font-size: 20px;
+      font-weight: bold;
+      .small-sum {
+        // will-change: opacity;
+        transition: opacity 200ms ease;
+        opacity: 0;
+        font-size: 25px;
+        float: right;
+        margin-top: -5px;
+        .unit {
+          font-size: 15px;
+        }
+      }
+    }
+    p.sum {
+      // will-change: opacity;
+      transition: opacity 200ms ease;
+      opacity: 1;
+      font-size: 34px;
+      font-weight: bold;
+      letter-spacing: -1px;
+      margin-bottom: 0;
+      .unit {
+        margin-left: 5px;
+        font-size: 18px;
+      }
+    }
+    .btns {
+      display: flex;
+      width: 100%;
+      margin-top: 10px;
+      button {
+        flex: 1 1 0;
+        padding: 10px;
+        background: #ebebeb;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      button + button {
+        margin-left: 10px;
+      }
+    }
+  }
+  .box {
+    margin-top: 25px;
+    padding: 20px 18px;
+    border: 1px solid #ebebeb;
+    border-radius: 6px;
+    h3 {
+      font-size: 16px;
+    }
+    &.used-box {
+      div {
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+        p {
+          padding-top: 10px;
+          .date {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+            .bar {
+              margin: 0 2px;
+              color: #999;
+            }
+          }
+        }
+      }
+    }
+
+    &.loan-info {
+      border: none;
+      padding: 0;
+      ul {
+        overflow: hidden;
+        border: 1px solid #ebebeb;
+        border-radius: 6px;
+        li {
+          height: 108px;
+          button {
+            background: rgba(0, 0, 0,.15);
+            color: #fff;
+          }
+          width: 50%;
+          padding: 20px;
+          float: right;
+          box-sizing: border-box;
+          p {
+            font-size: 14px;
+          }
+          .sum {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px 0;
+            margin-bottom: 0;
+            .unit {
+              font-size: 14px;
+            }
+          }
+          .desc {
+            margin-top: 5px;
+            font-size: 12px;
+            line-height: 14px;
+            font-weight: bold;
+            color: #999;
+          }
+          &:nth-child(1) {
+            float: left;
+            height: 216px;
+            border-right: 1px solid #ebebeb;
+          }
+          &:nth-child(2) {
+            border-bottom: 1px solid #ebebeb;
+          }
+
+          .donut-wrap {
+            width: 110px;
+            margin: 0 auto;
+            position: relative;
+            .circular-chart {
+              display: block;
+              max-height:250px;
+              .circle-bg {
+                fill: none;
+                stroke: rgba(0, 0, 0, .12);
+                stroke-width: 0.5;
+              }
+              .circle {
+                fill: none;
+                stroke: #32b8e0;
+                stroke-width: 0.5;
+                stroke-linecap:round;
+                animation: progress .5s ease-out forwards;
+              }
+            }
+            .percentage {
+              position: absolute;
+              left: 0;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 100%;
+              font-size: 20px;
+              font-weight: bold;
+              letter-spacing: -1px;
+              text-align: center;
+              color: #333;
+            }
+          }
+          @keyframes progress {
+            0% {
+              stroke-dasharray: 0 100;
+            }
+          }
+        }
+      }
+    }
+
+    &.point {
+      padding: 0 20px;
+      li {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px 0;
+        font-size: 16px;
+        font-weight: bold;
+        border-top: 1px solid #ebebeb;
+        align-items: center;
+        p:nth-child(2) {
+          font-size: 20px;
+        }
+        &:first-child {
+          border-top: none;
+        }
+      }
+    }
+    &.hurdle-wrap {
+      > p {
+        margin-top: 8px;
+        font-size: 16px;
+        letter-spacing: -1px;
+        color: #666;
+      }
+      .hurdle {
+        margin-top: 20px;
+        .sum {
+          margin-bottom: 0;
+          color: #000;
+          font-size: 20px;
+          font-weight: bold;
+          text-align: right;
+          .unit {
+            font-size: 14px;
+          }
+        }
+        .progress-bar {
+          width: 100%;
+          progress {
+            display: inline-block;
+            width: 100%;
+            height: 4px;
+            background: none;
+            border: 0;
+            border-radius: 8px;
+            vertical-align: middle;
+          }
+          progress::-webkit-progress-bar {
+            height: 4px;
+            background: none;
+            border-radius: 8px;
+          }
+          progress::-webkit-progress-value {
+            height: 4px;
+            background: #32b8e0;
+            border-radius: 20px;
+          }
+        }
+
+        div {
+          display: flex;
+          p {
+            flex: 1 1 0;
+            padding-left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-left: 1px solid #ebebeb;
+            span {
+              display: block;
+              font-weight: normal;
+              color: #666;
+            }
+          }
+        }
+      }
+    }
+
+    &.benefit {
+      .box-list {
+        margin-top: 10px;
+        li {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 5px 0;
+          p {
+            font-size: 14px;
+            color: #000;
+            &:last-child {
+              font-size: 15px;
+              font-weight: bold;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</style>
+
+<style lang="scss" scoped>
+.swiper-box {
+  // position: absolute;
+  // top: 0;
+  // left: 0;
+  // width: 100vw;
+  // z-index: 1;
+  .swiper-container {
+    .swiper-wrapper {
+      .swiper-slide.box {
+        max-height: 100vh;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 0;
+        overscroll-behavior: contain;
+        .crop-wrapper {
+          /deep/ .crop {
+            .close {
+              position: absolute;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</style>
+
+<style lang="scss" scoped>
+.home {
+  position: relative;
+  padding-top: 70px;
+  padding-bottom: 220px;
+  // &.transform {
+  //   padding-top: 0;
+  // }
+  &.full {
+    padding-top: 0;
+    padding-bottom: 0;
   }
 }
 
-.box {
-  .crop {
-    overflow: hidden;
-    position: relative;
-    background: #fff;
-    border-radius: 12px;
+/deep/ .box {
+  background: #fff;
+  margin: auto;
+  // margin-top: 20px;
+  position: relative;
+
+  .box-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
   }
+
+  .crop-wrapper {
+    position: relative;
+  }
+  // .crop {}
   .image {
     position: relative;
-    padding: 20px;
+    padding: 20px 20px 60px;
+    height: 434px;
     box-sizing: border-box;
+    overflow: hidden;
     p {
       &:nth-child(1) {
         font-size: 24px;
@@ -310,21 +831,8 @@ export default {
       &.desc + .desc {
         margin-top: 0;
       }
-      &.full-txt {
-        display: none;
-      }
-      &.bottom-txt {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-      }
     }
-    .full-txt {
-      display: none;
-    }
-
     button {
-      display: none;
       position: absolute;
       bottom: 20px;
       left: 20px;
@@ -332,13 +840,12 @@ export default {
       width: calc(100% - 40px);
       padding: 12px 0;
       border-radius: 4px;
+      -webkit-border-radius: 4px;
       font-size: 15px;
       color: #fff;
     }
   }
-
   .cont {
-    display: none;
     padding: 30px 0 0;
     h2 {
       padding: 0 20px;
@@ -377,112 +884,112 @@ export default {
           padding-top: 10px;
         }
       }
-      &.icon {
-        li {
-          padding-left: 70px;
-        }
-      }
-      &.click {
-        li {
-          p {
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #000;
-          }
-          span {
-             display: block;
-             line-height: 22px;
-          }
-        }
-      }
-      &.product {
-        li {
-          padding-left: 70px;
-          border-bottom: none;
-          .name {
-            font-size: 14px;
-            line-height: 18px;
-          }
-          .price {
-            display: block;
-            margin-top: 5px;
-            font-size: 16px;
-            line-height: 1;
-            font-weight: bold;
-          }
-        }
-        li + li {
-          border-top: 1px solid #EBEBEB;
-        }
-      }
     }
-    .bul-list {
-      margin: 0 20px;
-      padding-top: 209px;
-      border-top: 1px solid #ebebeb;
+    &.icon {
       li {
-        position: relative;
-        padding-left: 8px;
-        font-size: 14px;
-        line-height: 22px;
-        color: #666;
-        &:before {
-          display: inline-block;
-          content: '';
-          position: absolute;
-          top: 8px;
-          left: 0;
-          width: 3px;
-          height: 3px;
-          border-radius: 50%;
-          background: #999;
-        }
+        padding-left: 70px;
       }
     }
-    .more {
-      text-align: right;
-      button {
-        padding-top: 12px;
-        font-size: 14px;
-        color :#666;
-      }
-    }
-    .tbl-wrap {
-      margin: 15px 20px 0;
-      border-top: 1px solid #ebebeb;
-      th, td {
-        font-size: 14px;
-        padding: 10px 0 10px;
+    &.click {
+      li {
         p {
-          padding: 0;
-          font-size: 14px;
-          line-height: 20px;
+          margin-bottom: 5px;
+          font-weight: bold;
+          color :#000;
         }
-        p + p {
-          margin-top: 15px;
+        span {
+          display: block;
+          line-height: 22px;
         }
       }
-      th {
-        vertical-align: top;
-        font-weight: normal;
-        color: #666;
+    }
+    &.product {
+      li {
+        padding-left: 70px;
+        border-bottom: none;
+        .name {
+          font-size: 14px;
+          line-height: 18px;
+        }
+        .price {
+          display: block;
+          margin-top: 5px;
+          font-size: 16px;
+          line-height: 1;
+          font-weight: bold;
+        }
+      }
+      li + li {
+        border-top: 1px solid #ebebeb;
       }
     }
   }
+  .bul-list {
+    margin: 0 20px;
+    padding-top: 209px;
+    border-top: 1px solid #ebebeb;
+    li {
+      position: relative;
+      padding-left: 8px;
+      font-size: 14px;
+      line-height: 22px;
+      color: #666;
+      &:before {
+        display: inline-block;
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 0;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #999;
+      }
+    }
+  }
+  .more {
+    text-align: right;
+    button {
+      padding-top: 12px;
+      font-size: 14px;
+      color :#666;
+    }
+  }
+  .tbl-wrap {
+    margin: 15px 20px 0;
+    border-top: 1px solid #ebebeb;
+    th, td {
+      font-size: 14px;
+      padding: 10px 0 10px;
+      p {
+        padding: 0;
+        font-size: 14px;
+        line-height: 20px;
+      }
+      p + p {
+        margin-top: 15px;
+      }
+    }
+    th {
+      vertical-align: top;
+      font-weight: normal;
+      color: #666;
+    }
+  }
   .close {
-    display: none;
     position: fixed;
     top: 12px;
     right: 15px;
-    width: 18px;
-    height: 18px;
+    width: 26px;
+    height: 26px;
     padding: 3px;
     background: #666;
-    font-size: 8px;
+    font-size: 9px;
     font-weight: bold;
     line-height: 8px;
     color: #fff;
     border-radius: 50%;
+    text-align: center;
   }
   .time {
     margin: 10px 10px 0 0;
@@ -490,16 +997,234 @@ export default {
     color: #666;
     text-align: right;
   }
+}
+.box + .box {
+  margin-top: 20px;
+}
+</style>
 
-  &.slide, &.full {
-    position: fixed;
-    top: 0;
-    left: 0;
+
+<style lang="scss" scoped>
+// 0. used-list
+/deep/ .box.used-list {
+  .preview {
+    padding: 20px;
+  }
+  .cont {
+    h2 {
+      margin-bottom: 0;
+      font-size: 26px;
+      letter-spacing: -1px;
+    }
+    .date {
+      margin-bottom: 5px;
+      font-size: 14px;
+      line-height: 20px;
+      color: #666;
+    }
+    .list-wrap {
+      width: calc(100% - 40px);
+      margin: 0 20px;
+      padding-top: 20px;
+      .list {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 0;
+        > div {
+          p {
+            font-size: 15px;
+            color: #333;
+          }
+          span {
+            display: block;
+            font-size: 14px;
+            line-height: 20px;
+            color: #666;
+            .bar {
+              display: inline-block;
+              margin: 0 8px;
+              color: #999;
+            }
+          }
+        }
+        > p {
+          font-size: 15px;
+          color: #333;
+        }
+      }
+      p {
+        padding: 0;
+      }
+    }
+    .list-wrap + .list-wrap {
+      border-top: 1px solid #ebebeb;
+    }
+    .more {
+      text-align: center;
+      button {
+        font-size: 16px;
+        font-weight: bold;
+        color: #000;
+      }
+    }
+  }
+}
+
+// 1. box1
+/deep/ .box.box1 {
+  .image {
+    background: url('../assets/images/box1_background2.gif');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center top;
+    p {
+      color: #fff;
+    }
+  }
+  &.collapsed {
+    .image {
+      height: 200px;
+    }
+  }
+  &.expanded {
+    .image {
+      height: 434px;
+    }
+  }
+}
+
+// 2. box2
+/deep/ .box.box2 {
+  .image {
+    background: url('../assets/images/box2_background.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center top;
+    height: 434px;
+    p {
+      color: #fff;
+    }
+  }
+  .ad {
+    min-height: 300px;
+    background: #269e5c;
+    padding: 40px 10px 10px;
+    margin-top: 60px;
+    h2 {
+      text-align: center;
+      color: #000;
+    }
+    p {
+      margin-top: 15px;
+      font-size: 16px;
+      text-align: center;
+      color: #000;
+    }
+  }
+  .bottom {
+    padding: 40px 0;
+    margin-top: 50px;
+    background: #ebebeb;
+    text-align: center;
+    h3 {
+      font-size: 16px;
+      text-align: center;
+    }
+    .more {
+      margin-top: 10px;
+      text-align: center;
+    }
+  }
+}
+
+// 3. box3
+/deep/ .box.box3 {
+  .image {
+    background: url('../assets/images/box1_background2.gif');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center top;
+    p {
+      color: #fff;
+    }
+  }
+  &.collapsed {
+    .image {
+      height: 434px;
+    }
+  }
+  &.expanded {
+    .image {
+      height: 434px;
+    }
+  }
+}
+</style>
+
+<style lang="scss" scoped>
+/deep/ .box {
+  &.collapsed {
+    overflow: hidden;
+    border-radius: 12px;
+    width: calc(100% - 40px);
+    .preview {
+      display: block;
+    }
+    .cont {
+      display: none;
+    }
+    .close {
+      display: none;
+    }
+
+    .image {
+      p.full-txt {
+        display: none;
+      }
+      // p.bottom-txt {
+      //   position: absolute;
+      //   bottom: 20px;
+      //   left: 20px;
+      // }
+      button {
+        display: none;
+      }
+    }
+  }
+  &.expanded {
     width: 100%;
-    height: 100%;
-    margin-top: 0 !important;
-    background: #fff;
-    z-index: 10;
+    margin: 0;
+    min-height: 100vh;
+    transform: none !important;
+    .preview {
+      display: none;
+    }
+    .cont {
+      display: block;
+      padding-bottom: 40px !important;
+    }
+    .close {
+      display: block;
+    }
+
+    .image {
+      p.full-txt {
+        display: block;
+      }
+      button {
+        display: block;
+      }
+    }
+  }
+  &.transform {
+    // position: absolute;
+    z-index: 3;
+    border-radius: none !important;
+    box-shadow: none;
+    overflow: hidden;
+    .preview {
+      display: none;
+    }
     .crop {
       height: auto !important;
       padding: 0;
@@ -517,212 +1242,62 @@ export default {
         display: block !important;
       }
     }
-  }
-  &.slide {
     .cont {
       display: block;
     }
   }
-  &.full {
-    overflow-y: auto;
-    .cont {
-      display: block;
-    }
+  &.hidden {
+    display: none;
+  }
+  &.collapsing {
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: none;
     .close {
-      display: block;
+      display: none;
     }
-  }
-
-
-  &.used-list {
-    .preview {
-      padding: 20px;
-    }
-    .cont {
-      h2 {
-        margin-bottom: 0;
-        font-size: 26px;
-        letter-spacing: -1px;
-      }
-      .date {
-        margin-bottom: 5px;
-        font-size: 14px;
-        line-height: 20px;
-        color: #666;
-      }
-      .list-wrap {
-        width: calc(100% - 40px);
-        margin: 0 20px;
-        padding-top: 20px;
-        .list {
-          display: flex;
-          justify-content: space-between;
-          padding: 15px 0;
-          > div {
-            p {
-              font-size: 15px;
-              color: #333;
-            }
-            span {
-              display: block;
-              font-size: 14px;
-              line-height: 20px;
-              color: #666;
-              .bar {
-                display: inline-block;
-                margin: 0 8px;
-                color: #999;
-              }
-            }
-          }
-          > p {
-            font-size: 15px;
-            color: #333;
-          }
-        }
-        p {
-          padding: 0;
-        }
-      }
-      .list-wrap + .list-wrap {
-        border-top: 1px solid #ebebeb;
-      }
-      .more {
-        text-align: center;
-        button {
-          font-size: 16px;
-          font-weight: bold;
-          color: #000;
-        }
-      }
-    }
-    &.slide {
-      .preview {
-        display: none;
-      }
-      .more {
-        display: none;
-      }
-    }
-    &.full {
-      .preview {
-        display: none;
-      }
-    }
-  }
-
-  &.box1 {
     .image {
-      height: 200px;
-      background: #44b2b7;
-      p {
-        color: #fff;
+      button {
+        display: none !important;
       }
     }
   }
-
-  &.box2 {
-    .image {
-      height: 434px;
-      background: #108c25;
-      p {
-        color: #000;
-      }
-    }
-    .ad {
-      min-height: 300px;
-      background: #269e5c;
-      padding: 40px 10px 10px;
-      margin-top: 60px;
-      h2 {
-        text-align: center;
-        color :#000;
-      }
-      p {
-        margin-top: 15px;
-        font-size: 16px;
-        text-align: center;
-        color: #000;
-      }
-    }
-    .bottom {
-      padding: 40px 0;
-      margin-top: 50px;
-      background: #ebebeb;
-      text-align: center;
-      h3 {
-        font-size: 16px;
-        text-align: center;
-      }
-      .more {
-        margin-top: 10px;
-        text-align: center;
-      }
-    }
-  }
-
-  &.box3 {
-    .image {
-      height: 200px;
-    }
-    .cont {
-      h2 + p {
-        font-size: 16px;
-        font-weight: 500;
-      }
-    }
-  }
-
-  &.box4 {
-    .image {
-      height: 200px;
-      box-sizing: border-box;
-      .bottom-txt {
-        margin-top: 15px;
-        font-size: 36px;
-        font-weight: bold;
-        span {
-          display: block;
-          font-size: 14px;
-          line-height: 20px;
-          font-weight: normal;
-        }
-      }
-    }
-    .cont {
-      .point-useinfo {
-        display: flex;
-        padding: 0 20px;
-        li {
-          flex: 1 1 0;
-          padding: 70px 10px 0 10px;
-          font-size: 14px;
-          line-height: 20px;
-          color: #666;
-          text-align: center;
-        }
-        li + li {
-          border-left: 1px solid #ebebeb;
-        }
-      }
-    }
-
-    &.slide, &.full {
-      .image {
-        .bottom-txt {
-          bottom: 70px;
-          span {
-            font-size: 18px;
-          }
-        }
-      }
-    }
-  }
-
-
 }
+</style>
 
-.box + .box {
-  margin-top: 20px;
+<style lang="scss" scoped>
+.top-menu {
+  overflow: hidden;
+  width: calc(100% - 40px);
+  z-index: 5;
+  margin: auto;
+  button {
+    background: #ebebeb;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+  }
+  button + button {
+    margin-left: 5px;
+  }
+  > button {
+    float: left;
+  }
+  p {
+    float: right;
+  }
+
+  transition: top 400ms ease;
+  position: fixed;
+  left: 20px;
+
+  &.show {
+    top: 20px;
+  }
+  &.hide {
+    // transform: translateY(-60px);
+    top: -60px;
+  }
 }
 </style>

@@ -14,6 +14,8 @@ module.exports = {
     'no-param-reassign': 'off',
     'no-unused-vars': 'warn',
     'no-trailing-spaces': 'warn',
+    'no-lonely-if': 'off',
+    'padded-blocks': 'off',
   },
   parserOptions: {
     parser: 'babel-eslint',

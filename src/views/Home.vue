@@ -22,12 +22,14 @@
 
     <div ref="swiperBox" class="swiper-box" v-show="showSwiper">
       <swiper ref="hSwiper" :options="swiperOptions">
-        <swiper-slide
-          ref="swiperSlide"
+        <swiper-slide ref="swiperSlide"
           v-for="(data, index) in slideData" :key="`slidebox${index}`"
           class="box expanded" :class="[`box${index}`, {'used-list': index === 0}]"
-          @touchend.native="releaseSlideScale(index)"
-          @touchcancel.native="releaseScale(index)">
+          @touchstart.native="touchStartOnSlide($event, index)"
+          @touchmove.native="touchMoveOnSlide($event, index)"
+          @touchend.native="touchEndOnSlide($event, index)"
+          @touchcancel.native="touchEndOnSlide($event, index)"
+          >
           <div class="crop-wrapper" v-html="data.cropData"></div>
         </swiper-slide>
       </swiper>
@@ -47,7 +49,6 @@ export default {
     importedSlideData: SLIDE_DATA,
     slideData: [],
     viewStatus: 'list',
-    // viewStatus: 'full',
     swiperOptions: {
       spaceBetween: 5,
     },
@@ -75,7 +76,6 @@ export default {
       const data = this.slideData[index];
       if (data.status === 'initial') {
         const el = this.$refs.cropBox[index];
-        // const el = this.$refs.cropBox;
         const rect = el.getBoundingClientRect();
         data.style['--current-top'] = `${rect.y}px`;
         data.style['--current-left'] = `${rect.x}px`;
@@ -87,33 +87,26 @@ export default {
           translateY: '0px',
           translateX: '0px',
         }, { duration: 0 });
-        // el.style.width = data.style['--current-width'];
-        // el.style.height = data.style['--current-height'];
 
         this.$nextTick(() => {
           this.slideData[index].status = 'scaleDown';
           Velocity(el, { scale: 0.97 }, { duration: 150, easing: 'ease' });
         });
-        // this.$nextTick(() => {
-        //   this.slideData[index].status = 'scaleDown';
-        //   el.style.transition = 'transform 150ms ease';
-        //   el.style.transform = 'scale(0.97)';
-        // });
       }
     },
+
     releaseScale(index) {
       if (this.viewStatus !== 'list') {
         return;
       }
-
       const data = this.slideData[index];
       if (data.status === 'scaleDown') {
         const el = this.$refs.cropBox[index];
-        // const el = this.$refs.cropBox;
         this.slideData[index].status = 'initial';
         Velocity(el, { scale: 1 }, { duration: 150, easing: 'ease' });
       }
     },
+
     expand(index) {
       if (this.viewStatus !== 'list') {
         return;
@@ -123,7 +116,7 @@ export default {
 
       const data = this.slideData[index];
       if (data.status === 'scaleDown') {
-        // document.scrollingElement.style.overflow = 'hidden';
+        document.scrollingElement.style.overflow = 'hidden';
         // document.scrollingElement.scrollTo(0, this.windowScrollTop);
         this.hideMenu();
         const el = this.$refs.cropBox[index];
@@ -195,10 +188,7 @@ export default {
             this.showSwiper = true;
             setTimeout(() => {
               this.showList = false;
-
-              if (!this.slideGMInitialized) {
-                this.initSlideGestureManager();
-              }
+              this.initSlideGestureManager();
             }, 100);
           });
       }
@@ -240,7 +230,7 @@ export default {
             height: initialHeight,
           },
           {
-            duration: 200,
+            duration: 400,
             easing: 'ease',
             queue: false,
           });
@@ -249,7 +239,7 @@ export default {
             width: initialWidth,
           },
           {
-            duration: 300,
+            duration: 400,
             easing: 'ease',
             queue: false,
           });
@@ -258,7 +248,7 @@ export default {
             translateY: '0px',
           },
           {
-            duration: 400,
+            duration: 600,
             // easing: [0.29, 0.78, 0.51, 0.92],
             easing: [0.5, 0.22, -0.06, 1],
             // easing: 'ease',
@@ -271,10 +261,7 @@ export default {
             el.style.height = '';
             el.classList.add('collapsed');
             el.classList.remove('collapsing');
-            // document.scrollingElement.style.overflow = '';
-            // console.log(this.$refs.hSwiper.swiper.activeIndex);
-            // const swiperActiveIdx = this.$refs.hSwiper.swiper.activeIndex;
-            // this.slideGestureManager[swiperActiveIdx].onTransition = false;
+            document.scrollingElement.style.overflow = '';
           });
       }, 10);
     },
@@ -283,136 +270,116 @@ export default {
       const el = this.$refs.topMenu;
       el.classList.remove('show');
       el.classList.add('hide');
-      // Velocity(el, { translateY: '-70px' }, { duration: 200, easing: 'ease' });
     },
     showMenu() {
       const el = this.$refs.topMenu;
       el.classList.remove('hide');
       el.classList.add('show');
-      // Velocity(el, { translateY: '0px' }, { duration: 200, easing: 'ease' });
     },
-    checkSlideScroll($event) {
-      console.log($event);
+
+    touchStartOnSlide($event, index) {
+      console.log('touchstart', `slide_${index}`, $event);
+      this.slideGestureManager[index].touchStartY = $event.touches[0].screenY;
     },
+    touchMoveOnSlide($event, index) {
+      const gmObj = this.slideGestureManager[index];
+      if (
+        this.slideGMInitialized
+        && gmObj
+        && gmObj.isPanDown
+        && !gmObj.onCollapseTransition
+      ) {
+        const { gm, touchStartY, panDownVelocity } = gmObj;
+
+        if (panDownVelocity >= 0.3) {
+          console.log('collapsing by velocity');
+          this.collapse();
+          gmObj.onCollapseTransition = true;
+          return;
+        }
+
+        const deltaY = $event.changedTouches[0].screenY - touchStartY;
+
+        console.log(panDownVelocity, deltaY);
+        if (deltaY >= 180) {
+          console.log('collapsing by deltaY');
+          this.collapse();
+          gmObj.onCollapseTransition = true;
+          return;
+        }
+
+        const scaleValue = 1 - (Math.abs(deltaY) * 0.0006);
+        Velocity(gm.element,
+          {
+            scale: scaleValue,
+          },
+          {
+            duration: 0,
+            queue: false,
+          });
+      }
+    },
+    touchEndOnSlide($event, index) {
+      const gmObj = this.slideGestureManager[index];
+      if (
+        this.slideGMInitialized
+        && gmObj
+        && gmObj.isPanDown
+      ) {
+        console.log('touchend', `slide_${index}`, $event);
+
+        if (!gmObj.onCollapseTransition) {
+          const { gm } = gmObj;
+          if (gm.element.style.transform !== '') {
+            Velocity(gm.element,
+              {
+                scale: 1,
+              },
+              {
+                duration: 200,
+                easing: 'ease',
+                queue: false,
+              });
+          }
+        }
+        gmObj.isPanDown = false;
+        gmObj.onCollapseTransition = false;
+
+      }
+    },
+
     initSlideGestureManager() {
       if (this.slideGMInitialized) {
         return;
       }
-      this.slideGMInitialized = true;
+
       const { slides } = this.$refs.hSwiper.swiper;
       slides.each((index, slide) => {
-        const gm = new Hammer(slide, { touchAction: 'pan-y pan-x' });
-        // const gm = new Hammer(slide);
 
-        const obj = {
-          managerObj: gm,
-          onTransition: false,
-        };
+        const gmObj = {};
 
-        this.slideGestureManager[index] = obj;
-
-
-        // gm.add(pan);
-
-        // gm.on('swipe');
-
+        const gm = new Hammer(slide, { touchAction: 'pan-x pan-y' });
         gm.get('pan').set({ direction: Hammer.DIRECTION_DOWN });
         gm.on('pandown', (ev) => {
-          const angle = Math.abs(ev.angle);
-          console.log('deltaY:', Math.abs(ev.deltaY), 'velocity:', ev.velocity, 'angle:', angle);
-
-          if (slide.scrollTop === 0 && angle >= 80 && angle <= 120) {
-            if (ev.velocity >= 0.25) {
-              // this.slideGestureManager[index].onTransition = true;
-              this.collapse();
-            } else if (!this.slideGestureManager[index].onTransition) {
-              // const scaleValue = Math.max(1 - (Math.abs(ev.deltaY) * 0.0018), 0.95);
-              
-              // Velocity(slide,
-              //   {
-              //     scale: scaleValue,
-              //   },
-              //   {
-              //     duration: 0,
-              //     queue: false,
-              //   });
+          if (slide.scrollTop === 0) {
+            const angle = Math.abs(ev.angle);
+            if (angle >= 80 && angle <= 120) {
+              this.slideGestureManager[index].isPanDown = true;
+              this.slideGestureManager[index].panDownVelocity = ev.velocity;
             }
           }
         });
 
-        // gm.get('swipe').set({ direction: Hammer.DIRECTION_DOWN });
-        // gm.on('swipedown', (ev) => {
-        //   console.log('swipe', ev);
-        //   this.collapse();
-        // });
-
-
-        // gm.get('pan').set({ direction: Hammer.DIRECTION_DOWN });
-        // gm.get('swipe').set({ direction: Hammer.DIRECTION_VERTICAL });
-        // gm.on('pandown', (ev) => {
-        //   if (slide.scrollTop === 0 && ev.isFinal) {
-        //     const scaleValue = Math.max(1 - (Math.abs(ev.deltaY) * 0.0006), 0.95);
-        //     console.log(ev);
-        //     console.log(ev.deltaY, ev.velocity, scaleValue);
-
-        //     if (ev.velocity >= 1) {
-        //       this.collapse();
-        //     } else if (Math.abs(ev.deltaY) > 1000) {
-        //       this.collapse();
-        //     } else if (!this.slideGestureManager[index].onTransition) {
-        //       this.slideGestureManager[index].onTransition = true;
-        //       Velocity(slide,
-        //         {
-        //           scale: scaleValue,
-        //         },
-        //         {
-        //           duration: 500,
-        //           easing: 'ease',
-        //         })
-        //         .then(() => {
-        //           this.slideGestureManager[index].onTransition = false;
-        //         });
-        //     }
-        //   }
-
-        //   // if (
-        //   //   slide.scrollTop === 0
-        //   //   // && ev.isFinal
-        //   //   && Math.abs(ev.deltaY) > 30
-        //   //   && ev.velocity > 0.3
-        //   // ) {
-        //   //   this.collapse();
-        //   // } else {
-        //   // const scaleValue = Math.max(1 - (Math.abs(ev.deltaY) * 0.0006), 0.97);
-
-        //   // const scaleValue = (1 - (Math.abs(ev.deltaY) * 0.0001));
-        //   // slide.style.transform = `scale(${scaleValue})`;
-
-        //   // }
-        //   // else if (!ev.isFinal) {
-        //   //   if (Math.abs(ev.deltaY) > 100) {
-        //   //     this.collapse();
-        //   //     return;
-        //   //   }
-        //   //   // console.log(ev.deltaY);
-        //   //   const scaleValue = ev.deltaY * 0.0006;
-        //   //   slide.style.transform = `scale(${1 - scaleValue})`;
-        //   // }
-        // });
-        // this.slideGestureManager.push(gm);
-        // gm.get('pan').set({ enable: false });
+        gmObj.gm = gm;
+        gmObj.isPanDown = false;
+        gmObj.panDownVelocity = 0;
+        gmObj.onCollapseTransition = false;
+        gmObj.onScaleTransition = false;
+        gmObj.touchStartY = 0;
+        this.slideGestureManager.push(gmObj);
       });
-    },
-    releaseSlideScale(index) {
-      const slide = this.$refs.hSwiper.swiper.slides[index];
-      Velocity(slide,
-        {
-          scale: 1,
-        },
-        {
-          duration: 400,
-          easing: 'ease',
-        });
+
+      this.slideGMInitialized = true;
     },
   },
   mounted() {
@@ -429,27 +396,6 @@ export default {
 
     window.collapse = this.collapse;
     window.homeVm = this;
-
-    // accountBox initial setting;
-    // const { height } = this.accountBoxRect;
-    // this.accountTranslateY = height - 180;
-
-    // Velocity(this.accountBox,
-    //   { translateY: this.accountTranslateY },
-    //   {
-    //     duration: 300,
-    //     delay: 1200,
-    //     easing: 'ease',
-    //   })
-    //   .then(() => {
-    //     this.accountBoxStatus = 'collapsed';
-    //   });
-
-    // window.addEventListener('scroll', this.onScroll);
-    // this.initAccountBoxGesture();
-    // setTimeout(() => {
-    //   this.initSlideGestureManager();
-    // }, 1000);
   },
 };
 </script>
@@ -813,6 +759,7 @@ $bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
         overflow-y: scroll;
         -webkit-overflow-scrolling: touch;
         margin-top: 0;
+        overscroll-behavior: contain;
         .crop-wrapper {
           /deep/ .crop {
             .close {
@@ -1242,7 +1189,7 @@ $bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
     width: 100%;
     margin: 0;
     min-height: 100vh;
-    transform: none !important;
+    // transform: none !important;
     .preview {
       display: none;
     }
@@ -1348,511 +1295,3 @@ $bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
   }
 }
 </style>
-
-// <style lang="scss" scoped>
-// .swiper-container,
-// .swiper-wrapper {
-//   width: 100%;
-//   height: 100vh;
-// }
-
-// .swiper-slide.box.full {
-//   position: relative;
-//   /deep/ .close {
-//     position: absolute;
-//     width: initial;
-//     height: initial;
-//   }
-// }
-
-// /deep/ .box {
-//   border-radius: 12px;
-//   box-shadow: 1px 1px 10px 6px rgba(0, 0, 0, .12);
-
-//   &.no-shadow {
-//     box-shadow: none;
-//     margin-top: 0 !important;
-//   }
-
-//   &.transform {
-//     box-shadow: none;
-//     z-index: 10;
-//     overflow-y: scroll;
-//     .preview {
-//       display: none;
-//     }
-//     .crop {
-//       height: auto !important;
-//       padding: 0;
-//     }
-//     .time {
-//       display: none;
-//     }
-//     .image {
-//       padding: 20px 20px 60px;
-//       height: 434px !important;
-//       .full-txt {
-//         display: block;
-//       }
-//       button {
-//         display: block !important;
-//       }
-//     }
-//     .cont {
-//       display: block;
-//     }
-//   }
-// }
-// .content-box {
-//   position: relative;
-// }
-// </style>
-
-// <style lang="scss" scoped>
-// .home {
-//   // padding: 65px 20px 20px;
-//   background: #ebebeb;
-// }
-
-// /deep/ .box {
-//   overflow: hidden;
-//   .crop {
-//     overflow: hidden;
-//     position: relative;
-//     background: #fff;
-//     border-radius: 12px;
-//   }
-//   .image {
-//     position: relative;
-//     padding: 20px;
-//     box-sizing: border-box;
-//     p {
-//       &:nth-child(1) {
-//         font-size: 24px;
-//         line-height: 30px;
-//       }
-//       &.desc {
-//         margin-top: 5px;
-//         font-size: 15px;
-//         line-height: 22px;
-//       }
-//       &.desc + .desc {
-//         margin-top: 0;
-//       }
-//       &.full-txt {
-//         display: none;
-//       }
-//       &.bottom-txt {
-//         position: absolute;
-//         bottom: 20px;
-//         left: 20px;
-//       }
-//     }
-//     .full-txt {
-//       display: none;
-//     }
-
-//     button {
-//       display: none;
-//       position: absolute;
-//       bottom: 20px;
-//       left: 20px;
-//       background: #333;
-//       width: calc(100% - 40px);
-//       padding: 12px 0;
-//       border-radius: 4px;
-//       font-size: 15px;
-//       color: #fff;
-//     }
-//   }
-
-//   .cont {
-//     display: none;
-//     padding: 30px 0 0;
-//     h2 {
-//       padding: 0 20px;
-//       margin: 50px 0 10px;
-//       font-size: 18px;
-//       &:first-child {
-//         margin-top: 0;
-//       }
-//     }
-//     p {
-//       padding: 0 20px;
-//       font-size: 13px;
-//       line-height: 19px;
-//     }
-//     .box-list {
-//       padding: 0 20px;
-//       li {
-//         padding: 20px 0;
-//         border-bottom: 1px solid #ebebeb;
-//         p {
-//           display: inline-block;
-//           padding: 0;
-//           font-size: 16px;
-//           line-height: 22px;
-//           strong {
-//             font-size: 30px;
-//           }
-//           &.num {
-//             width: 60px;
-//             margin-right: 10px;
-//             font-weight: bold;
-//             text-align: center;
-//           }
-//         }
-//         &:first-child {
-//           padding-top: 10px;
-//         }
-//       }
-//       &.icon {
-//         li {
-//           padding-left: 70px;
-//         }
-//       }
-//       &.click {
-//         li {
-//           p {
-//             margin-bottom: 5px;
-//             font-weight: bold;
-//             color: #000;
-//           }
-//           span {
-//              display: block;
-//              line-height: 22px;
-//           }
-//         }
-//       }
-//       &.product {
-//         li {
-//           padding-left: 70px;
-//           border-bottom: none;
-//           .name {
-//             font-size: 14px;
-//             line-height: 18px;
-//           }
-//           .price {
-//             display: block;
-//             margin-top: 5px;
-//             font-size: 16px;
-//             line-height: 1;
-//             font-weight: bold;
-//           }
-//         }
-//         li + li {
-//           border-top: 1px solid #EBEBEB;
-//         }
-//       }
-//     }
-//     .bul-list {
-//       margin: 0 20px;
-//       padding-top: 209px;
-//       border-top: 1px solid #ebebeb;
-//       li {
-//         position: relative;
-//         padding-left: 8px;
-//         font-size: 14px;
-//         line-height: 22px;
-//         color: #666;
-//         &:before {
-//           display: inline-block;
-//           content: '';
-//           position: absolute;
-//           top: 8px;
-//           left: 0;
-//           width: 3px;
-//           height: 3px;
-//           border-radius: 50%;
-//           background: #999;
-//         }
-//       }
-//     }
-//     .more {
-//       text-align: right;
-//       button {
-//         padding-top: 12px;
-//         font-size: 14px;
-//         color :#666;
-//       }
-//     }
-//     .tbl-wrap {
-//       margin: 15px 20px 0;
-//       border-top: 1px solid #ebebeb;
-//       th, td {
-//         font-size: 14px;
-//         padding: 10px 0 10px;
-//         p {
-//           padding: 0;
-//           font-size: 14px;
-//           line-height: 20px;
-//         }
-//         p + p {
-//           margin-top: 15px;
-//         }
-//       }
-//       th {
-//         vertical-align: top;
-//         font-weight: normal;
-//         color: #666;
-//       }
-//     }
-//   }
-//   .close {
-//     display: none;
-//     position: fixed;
-//     top: 12px;
-//     right: 15px;
-//     width: 18px;
-//     height: 18px;
-//     padding: 3px;
-//     background: #666;
-//     font-size: 8px;
-//     font-weight: bold;
-//     line-height: 8px;
-//     color: #fff;
-//     border-radius: 50%;
-//   }
-//   .time {
-//     margin: 10px 10px 0 0;
-//     font-size: 12px;
-//     color: #666;
-//     text-align: right;
-//   }
-
-//   &.slide, &.full {
-//     // position: fixed;
-//     // top: 0;
-//     // left: 0;
-//     width: 100%;
-//     height: 100%;
-//     margin-top: 0 !important;
-//     background: #fff;
-//     z-index: 10;
-//     .crop {
-//       height: auto !important;
-//       padding: 0;
-//     }
-//     .time {
-//       display: none;
-//     }
-//     .image {
-//       padding: 20px 20px 60px;
-//       height: 434px !important;
-//       .full-txt {
-//         display: block;
-//       }
-//       button {
-//         display: block !important;
-//       }
-//     }
-//   }
-//   &.slide {
-//     .cont {
-//       display: block;
-//     }
-//   }
-//   &.full {
-//     overflow-y: auto;
-//     // -webkit-overflow-scrolling: touch;
-//     // -webkit-transform: translate3d(0,0,0);
-//     // overscroll-behavior: contain;
-//     .cont {
-//       display: block;
-//     }
-//     .close {
-//       display: block;
-//     }
-//   }
-
-
-//   &.used-list {
-//     .preview {
-//       padding: 20px;
-//     }
-//     .cont {
-//       h2 {
-//         margin-bottom: 0;
-//         font-size: 26px;
-//         letter-spacing: -1px;
-//       }
-//       .date {
-//         margin-bottom: 5px;
-//         font-size: 14px;
-//         line-height: 20px;
-//         color: #666;
-//       }
-//       .list-wrap {
-//         width: calc(100% - 40px);
-//         margin: 0 20px;
-//         padding-top: 20px;
-//         .list {
-//           display: flex;
-//           justify-content: space-between;
-//           padding: 15px 0;
-//           > div {
-//             p {
-//               font-size: 15px;
-//               color: #333;
-//             }
-//             span {
-//               display: block;
-//               font-size: 14px;
-//               line-height: 20px;
-//               color: #666;
-//               .bar {
-//                 display: inline-block;
-//                 margin: 0 8px;
-//                 color: #999;
-//               }
-//             }
-//           }
-//           > p {
-//             font-size: 15px;
-//             color: #333;
-//           }
-//         }
-//         p {
-//           padding: 0;
-//         }
-//       }
-//       .list-wrap + .list-wrap {
-//         border-top: 1px solid #ebebeb;
-//       }
-//       .more {
-//         text-align: center;
-//         button {
-//           font-size: 16px;
-//           font-weight: bold;
-//           color: #000;
-//         }
-//       }
-//     }
-//     &.slide {
-//       .preview {
-//         display: none;
-//       }
-//       .more {
-//         display: none;
-//       }
-//     }
-//     &.full {
-//       .preview {
-//         display: none;
-//       }
-//     }
-//   }
-
-//   &.box1 {
-//     .image {
-//       height: 200px;
-//       background: #44b2b7;
-//       p {
-//         color: #fff;
-//       }
-//     }
-//   }
-
-//   &.box2 {
-//     .image {
-//       height: 434px;
-//       background: #108c25;
-//       p {
-//         color: #000;
-//       }
-//     }
-//     .ad {
-//       min-height: 300px;
-//       background: #269e5c;
-//       padding: 40px 10px 10px;
-//       margin-top: 60px;
-//       h2 {
-//         text-align: center;
-//         color :#000;
-//       }
-//       p {
-//         margin-top: 15px;
-//         font-size: 16px;
-//         text-align: center;
-//         color: #000;
-//       }
-//     }
-//     .bottom {
-//       padding: 40px 0;
-//       margin-top: 50px;
-//       background: #ebebeb;
-//       text-align: center;
-//       h3 {
-//         font-size: 16px;
-//         text-align: center;
-//       }
-//       .more {
-//         margin-top: 10px;
-//         text-align: center;
-//       }
-//     }
-//   }
-
-//   &.box3 {
-//     .image {
-//       height: 200px;
-//     }
-//     .cont {
-//       h2 + p {
-//         font-size: 16px;
-//         font-weight: 500;
-//       }
-//     }
-//   }
-
-//   &.box4 {
-//     .image {
-//       height: 200px;
-//       box-sizing: border-box;
-//       .bottom-txt {
-//         margin-top: 15px;
-//         font-size: 36px;
-//         font-weight: bold;
-//         span {
-//           display: block;
-//           font-size: 14px;
-//           line-height: 20px;
-//           font-weight: normal;
-//         }
-//       }
-//     }
-//     .cont {
-//       .point-useinfo {
-//         display: flex;
-//         padding: 0 20px;
-//         li {
-//           flex: 1 1 0;
-//           padding: 70px 10px 0 10px;
-//           font-size: 14px;
-//           line-height: 20px;
-//           color: #666;
-//           text-align: center;
-//         }
-//         li + li {
-//           border-left: 1px solid #ebebeb;
-//         }
-//       }
-//     }
-
-//     &.slide, &.full {
-//       .image {
-//         .bottom-txt {
-//           bottom: 70px;
-//           span {
-//             font-size: 18px;
-//           }
-//         }
-//       }
-//     }
-//   }
-
-
-// }
-
-
-// </style>
