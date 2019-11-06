@@ -1,15 +1,15 @@
-<template>
+z<template>
   <div class="home" :class="[...contentBoxClass]">
     <div ref="topMenu" class="top-menu show">
-      <button @click="$router.push('/home3')">M</button>
+      <button>M</button>
       <p>
-        <button>S</button>
-        <button>C</button>
-        <button>P</button>
+        <button>H3</button>
+        <button>AC</button>
+        <button>CB</button>
       </p>
     </div>
 
-    <div class="content-box" v-show="showList" :class="[...contentBoxClass]">
+    <!-- <div class="content-box" v-show="showList" :class="[...contentBoxClass]">
       <div ref="cropBox" v-for="(data, index) in slideData" :key="`cropbox${index}`"
         class="box collapsed" :class="[`box${index}`, {'used-list': index === 0}]">
         <div class="box-wrapper" v-show="viewStatus === 'list'"
@@ -18,18 +18,22 @@
           @touchend.self="expand(index)" />
         <div class="crop-wrapper" v-html="data.cropData"></div>
       </div>
-    </div>
+    </div> -->
 
-    <div ref="swiperBox" class="swiper-box" v-show="showSwiper">
-      <swiper ref="hSwiper" :options="swiperOptions" @slideChange="onSlideChange">
+    <div ref="swiperBox" class="swiper-box" :class="[viewStatus]">
+      <swiper ref="hSwiper" :options="swiperOptions">
         <swiper-slide ref="swiperSlide"
           v-for="(data, index) in slideData" :key="`slidebox${index}`"
-          class="box expanded" :class="[`box${index}`, {'used-list': index === 0}]"
-          @touchstart.native="touchStartOnSlide($event, index)"
-          @touchmove.native="touchMoveOnSlide($event, index)"
-          @touchend.native="touchEndOnSlide($event, index)"
-          @touchcancel.native="touchEndOnSlide($event, index)"
+          class="box collapsed" :class="[`box${index}`, {'used-list': index === 0}]"
           >
+          <!-- @touchstart.native.capture="touchStartOnSlide($event, index)"
+          @touchmove.native.capture="touchMoveOnSlide($event, index)"
+          @touchend.native.capture="touchEndOnSlide($event, index)"
+          @touchcancel.native.capture="touchEndOnSlide($event, index)" -->
+          <div class="box-wrapper" v-show="viewStatus === 'list'"
+            @touchstart.self.stop="scaleDown(index)"
+            @touchmove.self.stop="releaseScale(index)"
+            @touchend.self.stop="expand(index)" />
           <div class="crop-wrapper" v-html="data.cropData"></div>
         </swiper-slide>
       </swiper>
@@ -38,7 +42,6 @@
 </template>
 
 <script>
-import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock';
 import Velocity from 'velocity-animate';
 import Hammer from 'hammerjs';
 // import SLIDE_DATA from '@/store/slideData';
@@ -51,7 +54,9 @@ export default {
     slideData: [],
     viewStatus: 'list',
     swiperOptions: {
-      spaceBetween: 5,
+      // spaceBetween: 5,
+      allowSlideNext: false,
+      allowSlidePrev: false,
     },
     activeIndex: 0,
     windowScrollTop: 0,
@@ -76,7 +81,7 @@ export default {
 
       const data = this.slideData[index];
       if (data.status === 'initial') {
-        const el = this.$refs.cropBox[index];
+        const el = this.$refs.swiperSlide[index].$el;
         const rect = el.getBoundingClientRect();
         data.style['--current-top'] = `${rect.y}px`;
         data.style['--current-left'] = `${rect.x}px`;
@@ -102,7 +107,7 @@ export default {
       }
       const data = this.slideData[index];
       if (data.status === 'scaleDown') {
-        const el = this.$refs.cropBox[index];
+        const el = this.$refs.swiperSlide[index].$el;
         this.slideData[index].status = 'initial';
         Velocity(el, { scale: 1 }, { duration: 150, easing: 'ease' });
       }
@@ -117,10 +122,10 @@ export default {
 
       const data = this.slideData[index];
       if (data.status === 'scaleDown') {
-        // document.scrollingElement.style.overflow = 'hidden';
+        document.scrollingElement.style.overflow = 'hidden';
         // document.scrollingElement.scrollTo(0, this.windowScrollTop);
         this.hideMenu();
-        const el = this.$refs.cropBox[index];
+        const el = this.$refs.swiperSlide[index].$el;
 
         const calcTop = data.style['--current-top'].charAt(0) === '-'
           ? data.style['--current-top'].replace('-', '')
@@ -150,6 +155,7 @@ export default {
         Velocity(el,
           {
             width: target.width,
+            translateX: target.left,
           },
           {
             duration: 300,
@@ -170,58 +176,73 @@ export default {
             queue: false,
           })
           .then(() => {
-            this.$refs.cropBox.forEach((cropEl, cropIdx) => {
-              if (cropIdx !== index) {
-                cropEl.classList.add('hidden');
-              }
-            });
-            document.scrollingElement.scrollTo(0, 0);
-
-            data.status = 'expanded';
-            this.viewStatus = 'full';
+            const { swiper } = this.$refs.hSwiper;
+            swiper.allowSlidePrev = true;
+            swiper.allowSlideNext = true;
             this.activeIndex = index;
             this.$refs.hSwiper.swiper.slideTo(this.activeIndex, 0);
-
+            this.$refs.swiperSlide.forEach((slideComponent, idx) => {
+              if (idx !== index) {
+                slideComponent.$el.classList.remove('collapsed');
+                slideComponent.$el.classList.add('expanded');
+                this.slideData[idx].status = 'expanded';
+              }
+            });
+            // // document.scrollingElement.scrollTo(0, 0);
+            
             el.classList.remove('transform');
             el.classList.add('expanded');
+            data.status = 'expanded';
+            this.viewStatus = 'full';
+            Velocity(el, { translateY: 0, translateX: 0 }, { duration: 0, queue: false });
+
+            // this.$nextTick(() => {
             el.style.width = '';
             el.style.height = '';
-            el.style.transform = '';
+            // el.style.transform = '';
+            // });
 
-            this.showSwiper = true;
-            setTimeout(() => {
-              this.showList = false;
-              this.initSlideGestureManager();
-            }, 100);
+            // setTimeout(() => {
+            // }, 100);
+            // this.showSwiper = true;
+            // setTimeout(() => {
+            //   this.showList = false;
+            //   this.initSlideGestureManager();
+            // }, 100);
           });
       }
     },
 
     collapse() {
-      this.showList = true;
-      setTimeout(() => {
-        this.showSwiper = false;
-        this.$refs.hSwiper.swiper.slides.each((index, slide) => {
-          slide.style.transform = '';
-        });
-      }, 100);
+      // this.showList = true;
+      // setTimeout(() => {
+      //   this.showSwiper = false;
+      //   this.$refs.hSwiper.swiper.slides.each((index, slide) => {
+      //     slide.style.transform = '';
+      //   });
+      // }, 100);
       // debugger;
       setTimeout(() => {
-        const index = this.activeIndex;
+        const index = this.$refs.hSwiper.swiper.activeIndex;
         const data = this.slideData[index];
-        const el = this.$refs.cropBox[index];
+        const el = this.$refs.swiperSlide[index].$el;
 
         // const initialTop = data.style['--current-top'];
-        // const initialLeft = data.style['--current-left'];
+        const initialLeft = data.style['--current-left'];
         const initialWidth = data.style['--current-width'];
         const initialHeight = data.style['--current-height'];
 
         el.classList.remove('expanded');
         el.classList.add('collapsing');
-        this.$refs.cropBox.forEach((cropEl, idx) => {
-          cropEl.classList.remove('hidden');
-          this.slideData[idx].status = 'initial';
+        this.$refs.swiperSlide.forEach((slideComponent, idx) => {
+          if (idx !== index) {
+            slideComponent.$el.classList.remove('expanded');
+            slideComponent.$el.classList.add('collapsed');
+            this.slideData[idx].status = 'initial';
+          }
         });
+
+        this.$refs.hSwiper.swiper.slideTo(0, 0);
 
         this.viewStatus = 'list';
 
@@ -241,6 +262,7 @@ export default {
         Velocity(el,
           {
             width: initialWidth,
+            translateX: 0,
           },
           {
             duration: 400,
@@ -249,7 +271,7 @@ export default {
           });
         Velocity(el,
           {
-            translateY: '0px',
+            translateY: 0,
           },
           {
             duration: 600,
@@ -261,16 +283,11 @@ export default {
           .then(() => {
             data.status = 'initial';
             el.style.transform = '';
-            el.style.width = '';
-            el.style.height = '';
+            // el.style.width = '';
+            // el.style.height = '';
             el.classList.add('collapsed');
             el.classList.remove('collapsing');
-            // document.scrollingElement.style.overflow = '';
-
-            // enableBodyScroll(el);
-            // clearAllBodyScrollLocks();
-
-            // this.viewStatus = 'list';
+            document.scrollingElement.style.overflow = '';
           });
       }, 10);
     },
@@ -299,8 +316,6 @@ export default {
         && !gmObj.onCollapseTransition
       ) {
         const { gm, touchStartY, panDownVelocity } = gmObj;
-        $event.preventDefault();
-        $event.stopPropagation();
 
         if (panDownVelocity >= 0.3) {
           console.log('collapsing by velocity');
@@ -320,11 +335,11 @@ export default {
           return;
         }
 
-        this.showList = true;
-        this.showSwiper = false;
-        const cropboxEl = this.$refs.cropBox[index];
+        // this.showList = true;
+        // this.showSwiper = false;
+        // const cropboxEl = this.$refs.cropBox[index];
         const scaleValue = 1 - (Math.abs(deltaY) * 0.0006);
-        Velocity(cropboxEl,
+        Velocity(gm.element,
           {
             translateY: 0,
             scale: scaleValue,
@@ -346,10 +361,8 @@ export default {
 
         if (!gmObj.onCollapseTransition) {
           const { gm } = gmObj;
-          console.log(gm.element);
-          const cropboxEl = this.$refs.cropBox[index];
-          if (cropboxEl.style.transform !== '') {
-            console.log('tt');
+          if (gm.element.style.transform !== '') {
+            // const cropboxEl = this.$refs.cropBox[index];
             Velocity(gm.element,
               {
                 scale: 1,
@@ -359,22 +372,22 @@ export default {
                 easing: 'ease',
                 queue: false,
               });
-            Velocity(cropboxEl,
-              {
-                scale: 1,
-              },
-              {
-                duration: 200,
-                easing: 'ease',
-                queue: false,
-              })
-              .then(() => {
-                cropboxEl.style.transform = '';
-                this.showList = false;
-                this.showSwiper = true;
-              });
+            // Velocity(cropboxEl,
+            //   {
+            //     scale: 1,
+            //   },
+            //   {
+            //     duration: 200,
+            //     easing: 'ease',
+            //     queue: false,
+            //   })
+            //   .then(() => {
+            //     cropboxEl.style.transform = '';
+            //   });
           }
 
+          // this.showList = false;
+          // this.showSwiper = true;
         }
         gmObj.isPanDown = false;
         gmObj.onCollapseTransition = false;
@@ -414,32 +427,6 @@ export default {
 
       this.slideGMInitialized = true;
     },
-
-    onSlideChange() {
-      const prevEl = this.$refs.cropBox[this.activeIndex];
-      prevEl.classList.remove('expanded');
-      prevEl.classList.add('collapsed', 'hidden');
-      this.activeIndex = this.$refs.hSwiper.swiper.activeIndex;
-      const nextEl = this.$refs.cropBox[this.activeIndex];
-      nextEl.classList.remove('collapsed', 'hidden');
-      nextEl.classList.add('expanded');
-      // this.windowScrollTop = this.slideData[this.activeIndex].style['--initial-top'] - 100;
-      // const aIdx = this.$refs.hSwiper.swiper.activeIndex;
-      // const { slides } = this.$refs.hSwiper.swiper;
-      // disableBodyScroll(slides[aIdx]);
-    },
-
-    getInitialRect() {
-      this.$refs.cropBox.forEach((el, index) => {
-        const rect = el.getBoundingClientRect();
-        const data = this.slideData[index];
-        data.style['--initial-top'] = rect.y;
-        data.style['--current-top'] = `${rect.y}px`;
-        data.style['--current-left'] = `${rect.x}px`;
-        data.style['--current-width'] = `${rect.width}px`;
-        data.style['--current-height'] = `${rect.height}px`;
-      });
-    },
   },
   mounted() {
     this.slideData = this.importedSlideData.map(data => ({
@@ -450,7 +437,6 @@ export default {
         '--current-left': '0px',
         '--current-width': '0px',
         '--current-height': '0px',
-        '--initial-top': 0,
       },
     }));
 
@@ -458,8 +444,9 @@ export default {
     window.homeVm = this;
 
     setTimeout(() => {
-      this.getInitialRect();
-    }, 100);
+      this.initSlideGestureManager();
+    }, 500);
+
   },
 };
 </script>
@@ -830,6 +817,19 @@ $bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
               position: absolute;
             }
           }
+        }
+      }
+    }
+  }
+
+  &.list, &.transform {
+    .swiper-container {
+      padding: 0 20px;
+      overflow: initial;
+      /deep/ .swiper-wrapper {
+        flex-direction: column;
+        .swiper-slide + .swiper-slide {
+          margin-top: 20px;
         }
       }
     }
@@ -1220,16 +1220,6 @@ $bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
 </style>
 
 <style lang="scss" scoped>
-.content-box {
-  /deep/ .box.expanded {
-    overflow: hidden;
-    // transform: none !important;
-    &.for-gesture {
-      transform: initial;
-    }
-  }
-}
-
 /deep/ .box {
   &.collapsed {
     overflow: hidden;
@@ -1262,7 +1252,8 @@ $bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
   &.expanded {
     width: 100%;
     margin: 0;
-    height: 100vh;
+    min-height: 100vh;
+    // transform: none !important;
     .preview {
       display: none;
     }

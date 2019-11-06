@@ -23,9 +23,12 @@ const routes = [
     component: () => import(/* webpackChunkName: "home2" */ '../views/Home2.vue'),
   },
   {
-    path: '/crop-box-detail',
-    name: 'cropBoxDetail',
-    component: () => import(/* webpackChunkName: "cropBoxDetail" */ '../views/CropBoxDetail.vue'),
+    path: '/home3',
+    name: 'home3',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "home2" */ '../views/Home3.vue'),
   },
 ];
 
