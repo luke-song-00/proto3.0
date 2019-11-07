@@ -307,12 +307,12 @@ export default {
         gm.get('pan').set({ direction: Hammer.DIRECTION_VERTICAL });
         gm.on('pandown panup', (ev) => {
           const angle = Math.abs(ev.angle);
-          console.log('deltaY:', Math.abs(ev.deltaY), 'velocity:', ev.velocity, 'angle:', angle);
+          // console.log('deltaY:', Math.abs(ev.deltaY), 'velocity:', ev.velocity, 'angle:', angle);
           if (document.scrollingElement.scrollTop === 0 && angle >= 80 && angle <= 120) {
             if (ev.velocity >= 0.1) {
               // this.slideGestureManager[index].onTransition = true;
               const rect = cropboxEl.getBoundingClientRect();
-              console.log(rect);
+              // console.log(rect);
               // Velocity(cropboxEl, { translateY: rect.y }, { duration: 0, queue: false });
               this.collapse();
             }

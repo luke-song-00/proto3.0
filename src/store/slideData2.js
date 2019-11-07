@@ -276,7 +276,7 @@ const SLIDE_DATA = [
   {
     cropData: `<div class="crop">
     <div class="image">
-      <p>TROP.COM<br>15% 할인 이벤트</p>
+      <p>TRIP.COM<br>15% 할인 이벤트</p>
       <p class="desc full-txt">트립닷컴에서 현대카드로<br>결제하면 엄청난 할인이!</p>
       <p class="desc">19.07.23 ~ 08.02</p>
       <button>참여</button>

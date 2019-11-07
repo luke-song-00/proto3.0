@@ -304,7 +304,7 @@ export default {
     },
 
     touchStartOnSlide($event, index) {
-      console.log('touchstart', `slide_${index}`, $event);
+      // console.log('touchstart', `slide_${index}`, $event);
       this.slideGestureManager[index].touchStartY = $event.touches[0].screenY;
     },
     touchMoveOnSlide($event, index) {
@@ -318,7 +318,7 @@ export default {
         const { gm, touchStartY, panDownVelocity } = gmObj;
 
         if (panDownVelocity >= 0.3) {
-          console.log('collapsing by velocity');
+          // console.log('collapsing by velocity');
           this.collapse();
           gmObj.onCollapseTransition = true;
           return;
@@ -327,9 +327,9 @@ export default {
 
         const deltaY = $event.changedTouches[0].screenY - touchStartY;
 
-        console.log(panDownVelocity, deltaY);
+        // console.log(panDownVelocity, deltaY);
         if (deltaY >= 140) {
-          console.log('collapsing by deltaY');
+          // console.log('collapsing by deltaY');
           this.collapse();
           gmObj.onCollapseTransition = true;
           return;
@@ -357,7 +357,7 @@ export default {
         && gmObj
         && gmObj.isPanDown
       ) {
-        console.log('touchend', `slide_${index}`, $event);
+        // console.log('touchend', `slide_${index}`, $event);
 
         if (!gmObj.onCollapseTransition) {
           const { gm } = gmObj;

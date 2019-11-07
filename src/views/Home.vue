@@ -139,6 +139,13 @@ export default {
         el.classList.add('transform');
         el.classList.remove('collapsed');
         this.viewStatus = 'transform';
+
+        // myaccount interface
+        window.removeEventListener('scroll', this.sendScrollEvent);
+        if (window.SPAJSInterface) {
+          window.SPAJSInterface.showAndHideMyAccount('true');
+        }
+
         Velocity(el,
           { translateY: target.top, scale: 1 },
           {
@@ -182,11 +189,11 @@ export default {
             this.activeIndex = index;
             this.$refs.hSwiper.swiper.slideTo(this.activeIndex, 0);
 
-            el.classList.remove('transform');
             el.classList.add('expanded');
             el.style.width = '';
             el.style.height = '';
             el.style.transform = '';
+            el.classList.remove('transform');
 
             this.showSwiper = true;
             setTimeout(() => {
@@ -271,6 +278,11 @@ export default {
             // clearAllBodyScrollLocks();
 
             // this.viewStatus = 'list';
+            // myaccount interface
+            window.addEventListener('scroll', this.sendScrollEvent);
+            if (window.SPAJSInterface) {
+              window.SPAJSInterface.showAndHideMyAccount('false');
+            }
           });
       }, 10);
     },
@@ -287,7 +299,7 @@ export default {
     },
 
     touchStartOnSlide($event, index) {
-      console.log('touchstart', `slide_${index}`, $event);
+      // console.log('touchstart', `slide_${index}`, $event);
       this.slideGestureManager[index].touchStartY = $event.touches[0].screenY;
     },
     touchMoveOnSlide($event, index) {
@@ -302,8 +314,8 @@ export default {
         $event.preventDefault();
         $event.stopPropagation();
 
-        if (panDownVelocity >= 0.3) {
-          console.log('collapsing by velocity');
+        if (panDownVelocity >= 0.6) {
+          // console.log('collapsing by velocity');
           this.collapse();
           gmObj.onCollapseTransition = true;
           return;
@@ -312,19 +324,19 @@ export default {
 
         const deltaY = $event.changedTouches[0].screenY - touchStartY;
 
-        console.log(panDownVelocity, deltaY);
-        if (deltaY >= 140) {
-          console.log('collapsing by deltaY');
+        // console.log(panDownVelocity, deltaY);
+        if (deltaY >= 200) {
+          // console.log('collapsing by deltaY');
           this.collapse();
           gmObj.onCollapseTransition = true;
           return;
         }
 
-        this.showList = true;
-        this.showSwiper = false;
-        const cropboxEl = this.$refs.cropBox[index];
+        // this.showList = true;
+        // this.showSwiper = false;
+        // const cropboxEl = this.$refs.cropBox[index];
         const scaleValue = 1 - (Math.abs(deltaY) * 0.0006);
-        Velocity(cropboxEl,
+        Velocity(gm.element,
           {
             translateY: 0,
             scale: scaleValue,
@@ -342,14 +354,13 @@ export default {
         && gmObj
         && gmObj.isPanDown
       ) {
-        console.log('touchend', `slide_${index}`, $event);
+        // console.log('touchend', `slide_${index}`, $event);
 
         if (!gmObj.onCollapseTransition) {
           const { gm } = gmObj;
-          console.log(gm.element);
-          const cropboxEl = this.$refs.cropBox[index];
-          if (cropboxEl.style.transform !== '') {
-            console.log('tt');
+          // console.log(gm.element);
+          // const cropboxEl = this.$refs.cropBox[index];
+          if (gm.element.style.transform !== '') {
             Velocity(gm.element,
               {
                 scale: 1,
@@ -359,20 +370,20 @@ export default {
                 easing: 'ease',
                 queue: false,
               });
-            Velocity(cropboxEl,
-              {
-                scale: 1,
-              },
-              {
-                duration: 200,
-                easing: 'ease',
-                queue: false,
-              })
-              .then(() => {
-                cropboxEl.style.transform = '';
-                this.showList = false;
-                this.showSwiper = true;
-              });
+            // Velocity(cropboxEl,
+            //   {
+            //     scale: 1,
+            //   },
+            //   {
+            //     duration: 200,
+            //     easing: 'ease',
+            //     queue: false,
+            //   })
+            //   .then(() => {
+            //     cropboxEl.style.transform = '';
+            //     this.showList = false;
+            //     this.showSwiper = true;
+            //   });
           }
 
         }
@@ -394,9 +405,10 @@ export default {
         const gm = new Hammer(slide, { touchAction: 'pan-x pan-y' });
         gm.get('pan').set({ direction: Hammer.DIRECTION_DOWN });
         gm.on('pandown', (ev) => {
-          if (slide.scrollTop === 0) {
+          // console.log('pandown', ev.deltaY, ev.angle);
+          if (slide.scrollTop <= 10) {
             const angle = Math.abs(ev.angle);
-            if (angle >= 80 && angle <= 120) {
+            if (angle >= 40 && angle <= 140) {
               this.slideGestureManager[index].isPanDown = true;
               this.slideGestureManager[index].panDownVelocity = ev.velocity;
             }
@@ -416,13 +428,13 @@ export default {
     },
 
     onSlideChange() {
-      const prevEl = this.$refs.cropBox[this.activeIndex];
-      prevEl.classList.remove('expanded');
-      prevEl.classList.add('collapsed', 'hidden');
-      this.activeIndex = this.$refs.hSwiper.swiper.activeIndex;
-      const nextEl = this.$refs.cropBox[this.activeIndex];
-      nextEl.classList.remove('collapsed', 'hidden');
-      nextEl.classList.add('expanded');
+      // const prevEl = this.$refs.cropBox[this.activeIndex];
+      // prevEl.classList.remove('expanded');
+      // prevEl.classList.add('collapsed', 'hidden');
+      // this.activeIndex = this.$refs.hSwiper.swiper.activeIndex;
+      // const nextEl = this.$refs.cropBox[this.activeIndex];
+      // nextEl.classList.remove('collapsed', 'hidden');
+      // nextEl.classList.add('expanded');
       // this.windowScrollTop = this.slideData[this.activeIndex].style['--initial-top'] - 100;
       // const aIdx = this.$refs.hSwiper.swiper.activeIndex;
       // const { slides } = this.$refs.hSwiper.swiper;
@@ -440,6 +452,14 @@ export default {
         data.style['--current-height'] = `${rect.height}px`;
       });
     },
+
+    sendScrollEvent() {
+      const scrollTop = Math.round(document.scrollingElement.scrollTop);
+      // console.log(scrollTop);
+      if (window.SPAJSInterface) {
+        window.SPAJSInterface.onWebViewScroll(`${scrollTop}`);
+      }
+    },
   },
   mounted() {
     this.slideData = this.importedSlideData.map(data => ({
@@ -456,6 +476,9 @@ export default {
 
     window.collapse = this.collapse;
     window.homeVm = this;
+
+
+    window.addEventListener('scroll', this.sendScrollEvent);
 
     setTimeout(() => {
       this.getInitialRect();
@@ -1223,9 +1246,9 @@ $bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
 .content-box {
   /deep/ .box.expanded {
     overflow: hidden;
-    // transform: none !important;
+    transform: none !important;
     &.for-gesture {
-      transform: initial;
+      // transform: initial;
     }
   }
 }
@@ -1303,8 +1326,7 @@ $bottom: calc(-#{$wH} + #{$heightPadding} + #{$headerHeight});
       padding: 20px 20px 60px;
       height: 434px !important;
       .full-txt {
-        display: block;
-      }
+        display: block;      }
       button {
         display: block !important;
       }
